@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="theme-color" content="#0E0C1B">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+
+<title>YANSIX — Painel Central</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="toast-region" class="toast-region" aria-live="polite"></div>
+
+<!-- =========================================================
+     LOGIN
+========================================================= -->
+<div id="login-screen" class="login-screen">
+  <div class="login-card">
+    <div class="login-brand"><span class="dot"></span> YANSIX · Painel Central</div>
+    <h1>Entrar</h1>
+    <p class="sub">Acesso restrito ao operador da plataforma.</p>
+    <div id="login-error" class="login-error" hidden></div>
+    <form id="login-form">
+      <div class="field">
+        <label for="login-email">E-mail</label>
+        <input type="email" id="login-email" required autocomplete="username">
+      </div>
+      <div class="field">
+        <label for="login-password">Senha</label>
+        <input type="password" id="login-password" required autocomplete="current-password">
+      </div>
+      <button type="submit" class="btn-primary" id="login-btn">Entrar</button>
+    </form>
+  </div>
+</div>
+
+<!-- =========================================================
+     APP SHELL
+========================================================= -->
+<div id="app-shell" class="app-shell">
+
+  <nav class="sidebar">
+    <div class="brand"><span class="dot"></span> YANSIX Central</div>
+    <a class="nav-link active" data-view="dashboard"><span class="nav-ico"></span> Dashboard</a>
+    <a class="nav-link" data-view="clientes"><span class="nav-ico"></span> Clientes</a>
+    <a class="nav-link" data-view="crms"><span class="nav-ico"></span> CRMs</a>
+    <a class="nav-link" data-view="monitoramento"><span class="nav-ico"></span> Monitoramento</a>
+    <div class="sidebar-footer">
+      <button class="btn-logout" id="btn-logout">Sair</button>
+    </div>
+  </nav>
+
+  <main class="content">
+
+    <!-- ===================== DASHBOARD ===================== -->
+    <section class="view active" id="view-dashboard">
+      <div class="view-head">
+        <div>
+          <h2>Dashboard</h2>
+          <p>Visão geral de todos os CRMs sob gestão.</p>
+        </div>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="label">Total de CRMs</div><div class="value mono" id="stat-total">0</div></div>
+        <div class="stat-card"><div class="label">Usuários (todos os CRMs)</div><div class="value mono" id="stat-ativos">0</div></div>
+        <div class="stat-card"><div class="label">Storage médio</div><div class="value mono" id="stat-implantacao">0%</div></div>
+        <div class="stat-card"><div class="label">Alertas abertos</div><div class="value mono" id="stat-alertas">0</div></div>
+      </div>
+
+      <div class="panel-card">
+        <h3>CRMs</h3>
+        <div id="dashboard-crm-list"><div class="empty">Nenhum CRM cadastrado ainda.</div></div>
+      </div>
+
+      <div class="panel-card">
+        <h3>Alertas em aberto</h3>
+        <div id="dashboard-alertas-list"><div class="empty">Nenhum alerta em aberto.</div></div>
+      </div>
+    </section>
+
+    <!-- ===================== CLIENTES ===================== -->
+    <section class="view" id="view-clientes">
+      <div class="view-head">
+        <div>
+          <h2>Clientes</h2>
+          <p>Empresas atendidas pela operação.</p>
+        </div>
+        <button class="btn primary" id="btn-novo-cliente">+ Novo cliente</button>
+      </div>
+      <div class="panel-card">
+        <table>
+          <thead>
+            <tr><th>Nome</th><th>Responsável</th><th>E-mail</th><th>Status</th><th>Criado em</th><th></th></tr>
+          </thead>
+          <tbody id="clientes-tbody"></tbody>
+        </table>
+        <div id="clientes-empty" class="empty" hidden>Nenhum cliente cadastrado.</div>
+      </div>
+    </section>
+
+    <!-- ===================== CRMS ===================== -->
+    <section class="view" id="view-crms">
+      <div class="view-head">
+        <div>
+          <h2>CRMs</h2>
+          <p>CRMs cadastrados para monitoramento, um por cliente.</p>
+        </div>
+        <button class="btn primary" id="btn-novo-crm">+ Cadastrar CRM</button>
+      </div>
+      <div class="panel-card">
+        <table>
+          <thead>
+            <tr><th>Cliente</th><th>Slug</th><th>Status</th><th>Storage</th><th>Última verificação</th><th></th></tr>
+          </thead>
+          <tbody id="crms-tbody"></tbody>
+        </table>
+        <div id="crms-empty" class="empty" hidden>Nenhum CRM criado ainda.</div>
+      </div>
+    </section>
+
+    <!-- ===================== MONITORAMENTO ===================== -->
+    <section class="view" id="view-monitoramento">
+      <div class="view-head">
+        <div>
+          <h2>Monitoramento</h2>
+          <p>Storage e saúde de cada banco Supabase de cliente.</p>
+        </div>
+      </div>
+      <div class="panel-card">
+        <div id="monitoramento-list"><div class="empty">Nenhum CRM cadastrado ainda.</div></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- =========================================================
+     MODAL: NOVO CLIENTE
+========================================================= -->
+<dialog id="cliente-modal">
+  <form id="cliente-form">
+    <div class="modal-head"><h3>Novo cliente</h3></div>
+    <div class="modal-body">
+      <div class="field"><label>Nome da empresa</label><input type="text" id="cliente-nome" required></div>
+      <div class="field"><label>Responsável</label><input type="text" id="cliente-responsavel"></div>
+      <div class="field"><label>E-mail</label><input type="email" id="cliente-email"></div>
+    </div>
+    <div class="modal-foot">
+      <button type="button" class="btn" id="cliente-cancelar">Cancelar</button>
+      <button type="submit" class="btn primary" id="cliente-salvar">Criar cliente</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- =========================================================
+     MODAL: CADASTRAR CRM (para monitoramento)
+========================================================= -->
+<dialog id="crm-modal">
+  <form id="crm-form">
+    <div class="modal-head"><h3>Cadastrar CRM</h3></div>
+    <div class="modal-body">
+      <p class="sub" style="margin:0 0 16px">Isso só registra o CRM para o painel poder monitorá-lo — não cria nem publica nada.</p>
+      <div class="field">
+        <label>Cliente</label>
+        <select id="crm-cliente" required></select>
+      </div>
+      <div class="field"><label>Identificador (slug)</label><input type="text" id="crm-slug" placeholder="empresa_a" required></div>
+      <div class="field"><label>URL pública do CRM</label><input type="text" id="crm-url" placeholder="https://www.yansix.tech/crm_empresa_a/"></div>
+      <div class="field"><label>Supabase URL (do projeto deste cliente)</label><input type="text" id="crm-supabase-url" placeholder="https://xxxx.supabase.co" required></div>
+      <div class="field"><label>Supabase anon key (do projeto deste cliente)</label><input type="text" id="crm-supabase-key" required></div>
+    </div>
+    <div class="modal-foot">
+      <button type="button" class="btn" id="crm-fechar">Fechar</button>
+      <button type="submit" class="btn primary" id="crm-salvar">Cadastrar CRM</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- =========================================================
+     MODAL: REGISTRAR VERIFICAÇÃO (métrica manual)
+========================================================= -->
+<dialog id="metrica-modal">
+  <form id="metrica-form">
+    <div class="modal-head"><h3>Registrar verificação</h3></div>
+    <div class="modal-body">
+      <input type="hidden" id="metrica-crm-id">
+      <div class="field"><label>Storage usado (MB)</label><input type="number" step="0.1" id="metrica-storage-usado" required></div>
+      <div class="field"><label>Storage limite (MB)</label><input type="number" step="0.1" id="metrica-storage-limite" value="500" required></div>
+      <div class="field"><label>Total de clientes cadastrados no CRM</label><input type="number" id="metrica-total-clientes" value="0"></div>
+      <div class="field"><label>Administradores</label><input type="number" id="metrica-admins" value="0"></div>
+      <div class="field"><label>Gestores</label><input type="number" id="metrica-gestores" value="0"></div>
+      <div class="field"><label>Vendedores</label><input type="number" id="metrica-vendedores" value="0"></div>
+    </div>
+    <div class="modal-foot">
+      <button type="button" class="btn" id="metrica-cancelar">Cancelar</button>
+      <button type="submit" class="btn primary">Salvar verificação</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
