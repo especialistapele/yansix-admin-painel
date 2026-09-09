@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="theme-color" content="#0E0C1B">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<title>Abrir chamado · YANSIX Suporte</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  body{background:
+    radial-gradient(700px 360px at 12% 0%, var(--purple-soft), transparent),
+    var(--bg);
+  }
+  .ticket-wrap{max-width:760px;margin:0 auto;padding:40px 20px 70px}
+  .ticket-brand{display:flex;align-items:center;gap:10px;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:15px;color:var(--text);margin-bottom:26px}
+  .ticket-brand .dot{width:9px;height:9px;border-radius:50%;background:var(--purple);box-shadow:0 0 0 4px rgba(91,61,245,.16)}
+  .ticket-hero{margin-bottom:28px}
+  .ticket-hero h1{font-size:28px;margin:0 0 8px}
+  .ticket-hero p{color:var(--muted);font-size:14px;margin:0;max-width:520px}
+  .ticket-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:0 12px 32px rgba(33,28,58,.06);overflow:hidden}
+  .ticket-section{padding:26px 28px;border-bottom:1px solid var(--line)}
+  .ticket-section:last-of-type{border-bottom:0}
+  .ticket-section h2{font-family:'Space Grotesk',sans-serif;font-size:15px;margin:0 0 3px}
+  .ticket-section .hint{color:var(--muted);font-size:12px;margin:0 0 18px}
+  .ticket-eyebrow{font-size:10px;text-transform:uppercase;letter-spacing:.09em;color:var(--purple);font-weight:700;margin:0 0 6px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+  .field textarea{width:100%;padding:11px 12px;background:var(--panel-alt);border:1px solid var(--line);border-radius:8px;color:var(--text);font-size:14px;font-family:inherit;outline:none;resize:vertical;min-height:78px}
+  .field textarea:focus{border-color:var(--purple-bright)}
+  .field small.help{display:block;margin-top:5px;color:var(--muted-dim);font-size:11px}
+
+  .product-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:6px}
+  .product-opt{border:1px solid var(--line);background:var(--panel-alt);border-radius:10px;padding:12px 10px;text-align:center;cursor:pointer;font-size:12.5px;font-weight:600;color:var(--text);transition:.15s}
+  .product-opt:hover{border-color:var(--purple-bright)}
+  .product-opt.selected{background:var(--purple);color:#fff;border-color:var(--purple)}
+  .product-opt input{display:none}
+
+  .priority-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .priority-opt{border:1px solid var(--line);border-radius:10px;padding:12px 8px;text-align:center;cursor:pointer;font-size:12.5px;font-weight:700}
+  .priority-opt input{display:none}
+  .priority-opt[data-p="baixa"]{color:var(--muted)}
+  .priority-opt[data-p="normal"]{color:#3867B7}
+  .priority-opt[data-p="alta"]{color:var(--amber)}
+  .priority-opt[data-p="critica"]{color:var(--red)}
+  .priority-opt.selected[data-p="baixa"]{background:var(--panel-alt);border-color:var(--muted-dim)}
+  .priority-opt.selected[data-p="normal"]{background:#EEF4FF;border-color:#3867B7}
+  .priority-opt.selected[data-p="alta"]{background:var(--amber-bg);border-color:var(--amber)}
+  .priority-opt.selected[data-p="critica"]{background:var(--red-bg);border-color:var(--red)}
+
+  .yesno{display:flex;gap:10px}
+  .yesno label{flex:1;border:1px solid var(--line);border-radius:8px;padding:10px;text-align:center;font-size:13px;font-weight:600;color:var(--text);cursor:pointer;background:var(--panel-alt)}
+  .yesno input{display:none}
+  .yesno input:checked + span{color:var(--purple)}
+  .yesno label.selected{border-color:var(--purple-bright);background:var(--purple-soft);color:var(--purple)}
+
+  .file-drop{border:1.5px dashed var(--line);border-radius:10px;padding:20px;text-align:center;color:var(--muted);font-size:13px;cursor:pointer;background:var(--panel-alt)}
+  .file-drop:hover{border-color:var(--purple-bright)}
+  .file-list{margin-top:10px;display:grid;gap:6px}
+  .file-item{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--panel-alt);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:12px}
+  .file-item button{border:0;background:transparent;color:var(--red);cursor:pointer;font-size:12px}
+
+  .ticket-foot{padding:22px 28px;display:flex;align-items:center;justify-content:flex-end;gap:12px;background:var(--panel-alt)}
+  .ticket-foot .btn-primary{width:auto;padding:12px 28px}
+  .ticket-error{background:var(--red-bg);color:var(--red);border:1px solid rgba(194,59,40,.25);border-radius:8px;padding:10px 12px;font-size:13px;margin:0 28px 0}
+
+  .confirm-screen{display:none}
+  .confirm-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:0 12px 32px rgba(33,28,58,.06);padding:42px 36px;text-align:center}
+  .confirm-check{width:56px;height:56px;border-radius:50%;background:var(--green-bg);color:var(--green);display:grid;place-items:center;font-size:28px;margin:0 auto 18px}
+  .confirm-card h1{font-size:22px;margin:0 0 6px}
+  .confirm-card p{color:var(--muted);font-size:13.5px;margin:0 0 22px}
+  .confirm-number{font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:600;background:var(--purple-soft);color:var(--purple);border-radius:10px;padding:14px;letter-spacing:.03em;margin-bottom:22px}
+  .confirm-sla{display:grid;grid-template-columns:1fr 1fr;gap:12px;text-align:left;margin-bottom:26px}
+  .confirm-sla .stat-card .label{font-size:10.5px}
+  .confirm-sla .stat-card .value{font-size:16px}
+
+  @media(max-width:640px){
+    .grid2,.grid3,.product-grid{grid-template-columns:1fr 1fr}
+    .priority-grid{grid-template-columns:1fr 1fr}
+    .confirm-sla{grid-template-columns:1fr}
+    .ticket-section{padding:20px}
+    .ticket-foot{padding:18px 20px;flex-direction:column-reverse;align-items:stretch}
+    .ticket-foot .btn-primary{width:100%}
+  }
+</style>
+</head>
+<body>
+
+<div class="ticket-wrap">
+
+  <div class="ticket-brand"><span class="dot"></span> YANSIX · Central de Suporte</div>
+
+  <!-- ===================== FORMULÁRIO ===================== -->
+  <div id="form-screen">
+    <div class="ticket-hero">
+      <h1>Abrir um chamado</h1>
+      <p>Conte pra gente o que aconteceu. Quanto mais detalhes, mais rápido conseguimos ajudar.</p>
+    </div>
+
+    <div id="ticket-error" class="ticket-error" hidden></div>
+
+    <form id="ticket-form">
+      <div class="ticket-card">
+
+        <!-- IDENTIFICAÇÃO -->
+        <div class="ticket-section">
+          <p class="ticket-eyebrow">1 · Identificação</p>
+          <h2>Quem está abrindo o chamado</h2>
+          <div class="hint">&nbsp;</div>
+          <div class="grid2">
+            <div class="field"><label>Nome da empresa *</label><input type="text" id="f-empresa" required></div>
+            <div class="field"><label>Nome do solicitante *</label><input type="text" id="f-solicitante" required></div>
+            <div class="field"><label>E-mail *</label><input type="email" id="f-email" required></div>
+            <div class="field"><label>Telefone / WhatsApp *</label><input type="tel" id="f-telefone" placeholder="(00) 00000-0000" required></div>
+          </div>
+        </div>
+
+        <!-- PRODUTO -->
+        <div class="ticket-section">
+          <p class="ticket-eyebrow">2 · Produto</p>
+          <h2>Qual produto está com problema?</h2>
+          <div class="hint">Selecione um.</div>
+          <div class="product-grid" id="product-grid"></div>
+        </div>
+
+        <!-- CATEGORIA / ASSUNTO -->
+        <div class="ticket-section">
+          <p class="ticket-eyebrow">3 · Assunto</p>
+          <h2>Resuma o que está acontecendo</h2>
+          <div class="hint">&nbsp;</div>
+          <div class="grid2">
+            <div class="field">
+              <label>Categoria do problema *</label>
+              <select id="f-categoria" required>
+                <option value="">Selecione</option>
+                <option>Erro / Bug</option>
+                <option>Dúvida de uso</option>
+                <option>Solicitação de melhoria</option>
+                <option>Acesso / Login</option>
+                <option>Financeiro</option>
+                <option>Configuração</option>
+                <option>Outro</option>
+              </select>
+            </div>
+            <div class="field"><label>Assunto do chamado *</label><input type="text" id="f-assunto" placeholder="Ex.: Não consigo salvar um cliente" required></div>
+          </div>
+        </div>
+
+        <!-- DESCRIÇÃO DO PROBLEMA -->
+        <div class="ticket-section">
+          <p class="ticket-eyebrow">4 · Descrição do problema</p>
+          <h2>Nos dê o máximo de detalhes</h2>
+          <div class="hint">&nbsp;</div>
+
+          <div class="field"><label>Descrição detalhada *</label><textarea id="f-descricao" required></textarea></div>
+
+          <div class="grid2">
+            <div class="field"><label>O que você estava tentando fazer?</label><textarea id="f-tentando"></textarea></div>
+            <div class="field"><label>O que aconteceu?</label><textarea id="f-aconteceu"></textarea></div>
+            <div class="field"><label>O que deveria ter acontecido?</label><textarea id="f-deveria"></textarea></div>
+            <div class="field"><label>Quando o problema começou?</label><input type="text" id="f-quando" placeholder="Ex.: hoje de manhã, há 2 dias..."></div>
+          </div>
+
+          <div class="grid3">
+            <div class="field">
+              <label>Acontece sempre ou eventualmente?</label>
+              <select id="f-frequencia">
+                <option value="">Selecione</option>
+                <option value="sempre">Sempre</option>
+                <option value="eventualmente">Eventualmente</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Impede totalmente o uso?</label>
+              <div class="yesno">
+                <label id="lbl-impede-sim"><input type="radio" name="impede" value="sim"><span>Sim</span></label>
+                <label id="lbl-impede-nao"><input type="radio" name="impede" value="nao"><span>Não</span></label>
+              </div>
+            </div>
+            <div class="field"><label>Quantas pessoas são afetadas?</label><input type="number" min="0" id="f-pessoas"></div>
+          </div>
+
+          <div class="grid2">
+            <div class="field"><label>URL da página afetada (se houver)</label><input type="url" id="f-url" placeholder="https://..."></div>
+            <div class="field"><label>Mensagem de erro (se houver)</label><input type="text" id="f-erro"></div>
+          </div>
+
+          <div class="grid3">
+            <div class="field">
+              <label>Navegador</label>
+              <select id="f-navegador">
+                <option value="">Selecione</option>
+                <option>Chrome</option><option>Safari</option><option>Firefox</option><option>Edge</option><option>Outro</option><option>Não sei</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Dispositivo</label>
+              <select id="f-dispositivo">
+                <option value="">Selecione</option>
+                <option>Computador</option><option>Notebook</option><option>Tablet</option><option>Celular</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Sistema operacional</label>
+              <select id="f-so">
+                <option value="">Selecione</option>
+                <option>Windows</option><option>macOS</option><option>Linux</option><option>Android</option><option>iOS</option><option>Outro</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field"><label>Passos para reproduzir o problema</label><textarea id="f-passos" placeholder="1. Acessei... 2. Cliquei em... 3. ..."></textarea></div>
+          <div class="field"><label>Observações adicionais</label><textarea id="f-obs"></textarea></div>
+        </div>
+
+        <!-- URGÊNCIA -->
+        <div class="ticket-section">
+          <p class="ticket-eyebrow">5 · Urgência</p>
+          <h2>Qual a prioridade deste chamado?</h2>
+          <div class="hint">O prazo de atendimento varia de acordo com a prioridade escolhida.</div>
+          <div class="priority-grid" id="priority-grid">
+            <label class="priority-opt" data-p="baixa"><input type="radio" name="prioridade" value="baixa"><span>Baixa</span></label>
+            <label class="priority-opt" data-p="normal"><input type="radio" name="prioridade" value="normal" checked><span>Normal</span></label>
+            <label class="priority-opt" data-p="alta"><input type="radio" name="prioridade" value="alta"><span>Alta</span></label>
+            <label class="priority-opt" data-p="critica"><input type="radio" name="prioridade" value="critica"><span>Crítica</span></label>
+          </div>
+        </div>
+
+        <!-- ANEXOS -->
+        <div class="ticket-section">
+          <p class="ticket-eyebrow">6 · Anexos</p>
+          <h2>Screenshots ou arquivos que ajudem a entender</h2>
+          <div class="hint">Não envie documentos pessoais, senhas ou dados bancários.</div>
+          <label class="file-drop" for="f-anexos">Clique para escolher arquivos (imagens, PDF, documentos)</label>
+          <input type="file" id="f-anexos" multiple style="display:none">
+          <div class="file-list" id="file-list"></div>
+        </div>
+
+      </div>
+
+      <div class="ticket-card" style="margin-top:16px">
+        <div class="ticket-foot">
+          <button type="submit" class="btn-primary" id="submit-btn">Abrir chamado</button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- ===================== CONFIRMAÇÃO ===================== -->
+  <div id="confirm-screen" class="confirm-screen">
+    <div class="confirm-card">
+      <div class="confirm-check">✓</div>
+      <h1>Chamado aberto com sucesso</h1>
+      <p>Guarde o número abaixo para acompanhar o andamento.</p>
+      <div class="confirm-number" id="confirm-numero">—</div>
+      <div class="confirm-sla">
+        <div class="stat-card"><div class="label">Previsão de 1ª resposta</div><div class="value" id="confirm-sla-resposta" style="font-family:'JetBrains Mono',monospace">—</div></div>
+        <div class="stat-card"><div class="label">Previsão de solução</div><div class="value" id="confirm-sla-solucao" style="font-family:'JetBrains Mono',monospace">—</div></div>
+      </div>
+      <button class="btn" onclick="location.reload()">Abrir outro chamado</button>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script>
+/**
+ * chamado.html — formulário público de abertura de chamado.
+ * Usa o mesmo Supabase do Painel Central (anon key), inserindo
+ * direto na tabela public.chamados. Não depende de login.
+ */
+const PRODUTOS = [
+  {id:"crm", nome:"CRM"},
+  {id:"website", nome:"Website"},
+  {id:"landpage", nome:"Landpage"},
+  {id:"showroom", nome:"Showroom"},
+  {id:"cashback", nome:"Cashback"},
+  {id:"estoque", nome:"Estoque"},
+  {id:"branding", nome:"Branding"},
+  {id:"consultoria", nome:"Consultoria"},
+  {id:"sistema_personalizado", nome:"Sistema Personalizado"},
+];
+
+const qs = new URLSearchParams(location.search);
+let produtoSelecionado = qs.get("produto") || "";
+let prioridadeSelecionada = "normal";
+let impedeUso = null;
+let arquivosSelecionados = [];
+
+// ---- monta grade de produtos ----
+const productGrid = document.getElementById("product-grid");
+productGrid.innerHTML = PRODUTOS.map(p => `
+  <label class="product-opt${produtoSelecionado===p.id?' selected':''}" data-id="${p.id}">
+    <input type="radio" name="produto" value="${p.id}" ${produtoSelecionado===p.id?'checked':''}>
+    ${p.nome}
+  </label>
+`).join("");
+productGrid.querySelectorAll(".product-opt").forEach(el => {
+  el.addEventListener("click", () => {
+    productGrid.querySelectorAll(".product-opt").forEach(o => o.classList.remove("selected"));
+    el.classList.add("selected");
+    el.querySelector("input").checked = true;
+    produtoSelecionado = el.dataset.id;
+  });
+});
+
+// ---- prioridade ----
+document.querySelectorAll(".priority-opt").forEach(el => {
+  if (el.dataset.p === prioridadeSelecionada) el.classList.add("selected");
+  el.addEventListener("click", () => {
+    document.querySelectorAll(".priority-opt").forEach(o => o.classList.remove("selected"));
+    el.classList.add("selected");
+    el.querySelector("input").checked = true;
+    prioridadeSelecionada = el.dataset.p;
+  });
+});
+
+// ---- sim/não impede uso ----
+["sim","nao"].forEach(v => {
+  document.getElementById(`lbl-impede-${v}`).addEventListener("click", () => {
+    document.getElementById("lbl-impede-sim").classList.toggle("selected", v==="sim");
+    document.getElementById("lbl-impede-nao").classList.toggle("selected", v==="nao");
+    impedeUso = v === "sim";
+  });
+});
+
+// ---- prefill via querystring (link vindo do CRM / Cashback) ----
+if (qs.get("empresa")) document.getElementById("f-empresa").value = qs.get("empresa");
+if (qs.get("nome")) document.getElementById("f-solicitante").value = qs.get("nome");
+if (qs.get("email")) document.getElementById("f-email").value = qs.get("email");
+const origemSistema = ["crm","cashback","website"].includes(qs.get("origem")) ? qs.get("origem") : "outro";
+
+// ---- anexos ----
+const fileInput = document.getElementById("f-anexos");
+const fileListEl = document.getElementById("file-list");
+fileInput.addEventListener("change", () => {
+  arquivosSelecionados = arquivosSelecionados.concat(Array.from(fileInput.files));
+  fileInput.value = "";
+  renderFileList();
+});
+function renderFileList(){
+  fileListEl.innerHTML = arquivosSelecionados.map((f,i) => `
+    <div class="file-item">
+      <span>${f.name} <small style="color:var(--muted-dim)">(${(f.size/1024).toFixed(0)} KB)</small></span>
+      <button type="button" data-i="${i}">remover</button>
+    </div>
+  `).join("");
+  fileListEl.querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
+    arquivosSelecionados.splice(Number(b.dataset.i), 1);
+    renderFileList();
+  }));
+}
+
+// ---- submit ----
+const form = document.getElementById("ticket-form");
+const errorBox = document.getElementById("ticket-error");
+const submitBtn = document.getElementById("submit-btn");
+
+function showError(msg){
+  errorBox.textContent = msg;
+  errorBox.hidden = false;
+  errorBox.scrollIntoView({behavior:"smooth", block:"center"});
+}
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  errorBox.hidden = true;
+
+  if (!produtoSelecionado) return showError("Selecione o produto relacionado ao chamado.");
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Enviando...";
+
+  try {
+    // 1) upload dos anexos (se houver) para o bucket privado
+    const anexos = [];
+    for (const file of arquivosSelecionados) {
+      const caminho = `${Date.now()}_${Math.random().toString(36).slice(2,8)}_${file.name}`.replace(/\s+/g,"_");
+      const { error: upErr } = await SUPABASE_CLIENT.storage
+        .from("chamados-anexos")
+        .upload(caminho, file);
+      if (upErr) throw new Error(`Falha ao enviar anexo "${file.name}": ${upErr.message}`);
+      anexos.push({ nome: file.name, caminho, tipo: file.type || "outro", tamanho: file.size });
+    }
+
+    // 2) grava o chamado
+    const payload = {
+      origem_sistema: origemSistema,
+      empresa: document.getElementById("f-empresa").value.trim(),
+      solicitante: document.getElementById("f-solicitante").value.trim(),
+      email: document.getElementById("f-email").value.trim(),
+      telefone: document.getElementById("f-telefone").value.trim(),
+      produto: produtoSelecionado,
+      categoria: document.getElementById("f-categoria").value,
+      assunto: document.getElementById("f-assunto").value.trim(),
+      descricao: document.getElementById("f-descricao").value.trim(),
+      tentando_fazer: document.getElementById("f-tentando").value.trim() || null,
+      o_que_aconteceu: document.getElementById("f-aconteceu").value.trim() || null,
+      deveria_acontecer: document.getElementById("f-deveria").value.trim() || null,
+      quando_comecou: document.getElementById("f-quando").value.trim() || null,
+      frequencia: document.getElementById("f-frequencia").value || null,
+      impede_uso: impedeUso === true,
+      pessoas_afetadas: document.getElementById("f-pessoas").value ? Number(document.getElementById("f-pessoas").value) : null,
+      url_afetada: document.getElementById("f-url").value.trim() || null,
+      mensagem_erro: document.getElementById("f-erro").value.trim() || null,
+      navegador: document.getElementById("f-navegador").value || null,
+      dispositivo: document.getElementById("f-dispositivo").value || null,
+      sistema_operacional: document.getElementById("f-so").value || null,
+      passos_reproducao: document.getElementById("f-passos").value.trim() || null,
+      observacoes: document.getElementById("f-obs").value.trim() || null,
+      prioridade: prioridadeSelecionada,
+      anexos,
+    };
+
+    const { data, error } = await SUPABASE_CLIENT
+      .from("chamados")
+      .insert(payload)
+      .select("*")
+      .single();
+    if (error) throw new Error(error.message);
+
+    // 3) tela de confirmação
+    document.getElementById("form-screen").style.display = "none";
+    document.getElementById("confirm-screen").style.display = "block";
+    document.getElementById("confirm-numero").textContent = data.numero;
+    const fmt = (iso) => iso ? new Date(iso).toLocaleString("pt-BR", { dateStyle:"short", timeStyle:"short" }) : "—";
+    document.getElementById("confirm-sla-resposta").textContent = fmt(data.prazo_primeira_resposta);
+    document.getElementById("confirm-sla-solucao").textContent = fmt(data.prazo_solucao);
+
+  } catch (err) {
+    showError(err.message || "Não foi possível abrir o chamado. Tente novamente.");
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Abrir chamado";
+  }
+});
+</script>
+</body>
+</html>

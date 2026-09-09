@@ -169,4 +169,74 @@ const API = {
     if (error) throw new Error(error.message);
     return true;
   },
+
+  // ---------- CHAMADOS ----------
+  async getChamados() {
+    const { data, error } = await SUPABASE_CLIENT
+      .from(tableName("CHAMADOS"))
+      .select("*")
+      .order("criado_em", { ascending: false });
+    if (error) throw new Error(error.message);
+    return data || [];
+  },
+  async getChamado(id) {
+    const { data, error } = await SUPABASE_CLIENT.from(tableName("CHAMADOS")).select("*").eq("id", id).single();
+    if (error) throw new Error(error.message);
+    return data;
+  },
+  async updateChamado(id, payload) {
+    const { data, error } = await SUPABASE_CLIENT
+      .from(tableName("CHAMADOS"))
+      .update(payload)
+      .eq("id", id)
+      .select("*")
+      .single();
+    if (error) throw new Error(error.message);
+    return data;
+  },
+  async removeChamado(id) {
+    const { error } = await SUPABASE_CLIENT.from(tableName("CHAMADOS")).delete().eq("id", id);
+    if (error) throw new Error(error.message);
+    return true;
+  },
+  async getMensagensChamado(chamadoId) {
+    const { data, error } = await SUPABASE_CLIENT
+      .from(tableName("CHAMADO_MENSAGENS"))
+      .select("*")
+      .eq("chamado_id", chamadoId)
+      .order("criado_em", { ascending: true });
+    if (error) throw new Error(error.message);
+    return data || [];
+  },
+  async addMensagemChamado(chamadoId, payload) {
+    const { data, error } = await SUPABASE_CLIENT
+      .from(tableName("CHAMADO_MENSAGENS"))
+      .insert({ chamado_id: chamadoId, ...payload })
+      .select("*")
+      .single();
+    if (error) throw new Error(error.message);
+    return data;
+  },
+  async getAnexoUrl(caminho) {
+    const { data, error } = await SUPABASE_CLIENT.storage
+      .from("chamados-anexos")
+      .createSignedUrl(caminho, 60 * 10); // 10 minutos
+    if (error) throw new Error(error.message);
+    return data.signedUrl;
+  },
+  async getSlaConfig() {
+    const { data, error } = await SUPABASE_CLIENT.from(tableName("SLA_CONFIG")).select("*");
+    if (error) throw new Error(error.message);
+    return data || [];
+  },
+  async updateSlaConfig(id, payload) {
+    const { data, error } = await SUPABASE_CLIENT
+      .from(tableName("SLA_CONFIG"))
+      .update(payload)
+      .eq("id", id)
+      .select("*")
+      .single();
+    if (error) throw new Error(error.message);
+    return data;
+  },
 };

@@ -52,6 +52,7 @@
     <a class="nav-link" data-view="clientes"><span class="nav-ico"></span> Clientes</a>
     <a class="nav-link" data-view="crms"><span class="nav-ico"></span> CRMs</a>
     <a class="nav-link" data-view="monitoramento"><span class="nav-ico"></span> Monitoramento</a>
+    <a class="nav-link" data-view="chamados"><span class="nav-ico"></span> Central de Chamados</a>
     <div class="sidebar-footer">
       <button class="btn-logout" id="btn-logout">Sair</button>
     </div>
@@ -139,6 +140,53 @@
       </div>
     </section>
 
+    <!-- ===================== CENTRAL DE CHAMADOS ===================== -->
+    <section class="view" id="view-chamados">
+      <div class="view-head">
+        <div>
+          <h2>Central de Chamados</h2>
+          <p>Suporte de todos os produtos do ecossistema YANSIX, num só lugar.</p>
+        </div>
+        <button class="btn" id="btn-copiar-link-chamado">Copiar link do formulário</button>
+      </div>
+
+      <div class="stat-grid" id="chamados-stat-grid" style="grid-template-columns:repeat(6,1fr)">
+        <div class="stat-card"><div class="label">Abertos</div><div class="value mono" id="ch-stat-aberto">0</div></div>
+        <div class="stat-card"><div class="label">Em atendimento</div><div class="value mono" id="ch-stat-atendimento">0</div></div>
+        <div class="stat-card"><div class="label">Críticos</div><div class="value mono" id="ch-stat-critico">0</div></div>
+        <div class="stat-card"><div class="label">Aguard. cliente</div><div class="value mono" id="ch-stat-aguardando">0</div></div>
+        <div class="stat-card"><div class="label">Resolvidos</div><div class="value mono" id="ch-stat-resolvido">0</div></div>
+        <div class="stat-card"><div class="label">Fora do prazo</div><div class="value mono" id="ch-stat-atrasado">0</div></div>
+      </div>
+
+      <div class="panel-card">
+        <h3>Por produto</h3>
+        <div id="chamados-por-produto"></div>
+      </div>
+
+      <div class="panel-card" style="padding:14px 20px">
+        <div class="toolbar-row" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+          <input type="text" id="ch-filtro-busca" placeholder="Buscar empresa, assunto, número..." style="flex:1;min-width:220px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel-alt)">
+          <select id="ch-filtro-produto" style="padding:9px;border:1px solid var(--line);border-radius:8px;background:var(--panel-alt)"><option value="">Todos os produtos</option></select>
+          <select id="ch-filtro-status" style="padding:9px;border:1px solid var(--line);border-radius:8px;background:var(--panel-alt)"><option value="">Todos os status</option></select>
+          <select id="ch-filtro-prioridade" style="padding:9px;border:1px solid var(--line);border-radius:8px;background:var(--panel-alt)">
+            <option value="">Toda prioridade</option>
+            <option value="critica">Crítica</option><option value="alta">Alta</option><option value="normal">Normal</option><option value="baixa">Baixa</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="panel-card">
+        <table>
+          <thead>
+            <tr><th>Número</th><th>Empresa</th><th>Produto</th><th>Assunto</th><th>Prioridade</th><th>Status</th><th>Aberto em</th><th></th></tr>
+          </thead>
+          <tbody id="chamados-tbody"></tbody>
+        </table>
+        <div id="chamados-empty" class="empty" hidden>Nenhum chamado encontrado.</div>
+      </div>
+    </section>
+
   </main>
 </div>
 
@@ -204,6 +252,17 @@
       <button type="submit" class="btn primary">Salvar verificação</button>
     </div>
   </form>
+</dialog>
+
+<!-- =========================================================
+     MODAL: DETALHE DO CHAMADO
+========================================================= -->
+<dialog id="chamado-modal" style="max-width:640px">
+  <div class="modal-head"><h3 id="chamado-modal-numero">Chamado</h3></div>
+  <div class="modal-body" id="chamado-modal-body" style="max-height:70vh;overflow:auto"></div>
+  <div class="modal-foot">
+    <button type="button" class="btn" id="chamado-fechar">Fechar</button>
+  </div>
 </dialog>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

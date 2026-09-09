@@ -8,6 +8,8 @@ const STATE = {
   crms: [],
   ultimaMetricaPorCrm: {},
   alertasAbertos: [],
+  chamados: [],
+  chamadoAtualId: null,
   lastActivity: Date.now(),
 };
 
@@ -106,22 +108,25 @@ document.querySelectorAll(".nav-link").forEach((link) => {
 // =========================================================
 async function loadAll() {
   try {
-    const [clientes, crms, ultimaMetrica, alertas] = await Promise.all([
+    const [clientes, crms, ultimaMetrica, alertas, chamados] = await Promise.all([
       API.getClientes(),
       API.getCrms(),
       API.getUltimaMetricaPorCrm(),
       API.getAlertas({ apenasAbertos: true }),
+      API.getChamados(),
     ]);
     STATE.clientes = clientes;
     STATE.crms = crms;
     STATE.ultimaMetricaPorCrm = ultimaMetrica;
     STATE.alertasAbertos = alertas;
+    STATE.chamados = chamados;
 
     renderDashboard();
     renderClientes();
     renderCrms();
     renderMonitoramento();
     preencherSelectClientes();
+    renderChamados();
   } catch (err) {
     toast(err.message || "Erro ao carregar dados.", "error");
   }
@@ -516,4 +521,204 @@ function renderMonitoramento() {
       metricaModal.showModal();
     });
   });
+}
+
+// =========================================================
+// CENTRAL DE CHAMADOS
+// =========================================================
+const CHAMADO_LABEL_PRODUTO = Object.fromEntries(CONFIG.PRODUTOS.map((p) => [p.id, p.nome]));
+
+function labelChamadoStatus(s) {
+  return CONFIG.CHAMADO_STATUS_LABELS[s] || s;
+}
+function corPrioridade(p) {
+  return { baixa: "var(--muted)", normal: "#3867B7", alta: "var(--amber)", critica: "var(--red)" }[p] || "var(--muted)";
+}
+function chamadoForaDoPrazo(c) {
+  if (["resolvido", "encerrado"].includes(c.status)) return false;
+  const prazo = c.prazo_solucao || c.prazo_primeira_resposta;
+  return prazo && new Date(prazo) < new Date();
+}
+function fmtDataHoraCurta(iso) {
+  if (!iso) return "—";
+  return new Date(iso).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+}
+
+// preenche os selects de filtro (produto / status) uma única vez
+(function initFiltrosChamados() {
+  const selProduto = document.getElementById("ch-filtro-produto");
+  const selStatus = document.getElementById("ch-filtro-status");
+  if (!selProduto || !selStatus) return;
+  CONFIG.PRODUTOS.forEach((p) => selProduto.insertAdjacentHTML("beforeend", `<option value="${p.id}">${p.nome}</option>`));
+  CONFIG.CHAMADO_STATUS.forEach((s) =>
+    selStatus.insertAdjacentHTML("beforeend", `<option value="${s}">${labelChamadoStatus(s)}</option>`)
+  );
+  ["ch-filtro-busca", "ch-filtro-produto", "ch-filtro-status", "ch-filtro-prioridade"].forEach((id) =>
+    document.getElementById(id).addEventListener("input", renderChamados)
+  );
+})();
+
+document.getElementById("btn-copiar-link-chamado")?.addEventListener("click", async () => {
+  const url = new URL("chamado.html", location.href).toString();
+  try {
+    await navigator.clipboard.writeText(url);
+    toast("Link do formulário copiado.", "success");
+  } catch {
+    toast(url, "");
+  }
+});
+
+function chamadosFiltrados() {
+  const busca = (document.getElementById("ch-filtro-busca")?.value || "").toLowerCase().trim();
+  const produto = document.getElementById("ch-filtro-produto")?.value || "";
+  const status = document.getElementById("ch-filtro-status")?.value || "";
+  const prioridade = document.getElementById("ch-filtro-prioridade")?.value || "";
+  return STATE.chamados.filter((c) => {
+    if (produto && c.produto !== produto) return false;
+    if (status && c.status !== status) return false;
+    if (prioridade && c.prioridade !== prioridade) return false;
+    if (busca) {
+      const alvo = `${c.numero} ${c.empresa} ${c.assunto} ${c.solicitante}`.toLowerCase();
+      if (!alvo.includes(busca)) return false;
+    }
+    return true;
+  });
+}
+
+function renderChamados() {
+  if (!document.getElementById("chamados-tbody")) return;
+
+  // ---- indicadores ----
+  const abertos = STATE.chamados.filter((c) => c.status === "aberto").length;
+  const atendimento = STATE.chamados.filter((c) => ["em_atendimento", "em_desenvolvimento", "em_analise"].includes(c.status)).length;
+  const criticos = STATE.chamados.filter((c) => c.prioridade === "critica" && !["resolvido", "encerrado"].includes(c.status)).length;
+  const aguardando = STATE.chamados.filter((c) => c.status === "aguardando_cliente").length;
+  const resolvidos = STATE.chamados.filter((c) => ["resolvido", "encerrado"].includes(c.status)).length;
+  const atrasados = STATE.chamados.filter(chamadoForaDoPrazo).length;
+  document.getElementById("ch-stat-aberto").textContent = abertos;
+  document.getElementById("ch-stat-atendimento").textContent = atendimento;
+  document.getElementById("ch-stat-critico").textContent = criticos;
+  document.getElementById("ch-stat-aguardando").textContent = aguardando;
+  document.getElementById("ch-stat-resolvido").textContent = resolvidos;
+  document.getElementById("ch-stat-atrasado").textContent = atrasados;
+
+  // ---- por produto ----
+  const porProduto = document.getElementById("chamados-por-produto");
+  porProduto.innerHTML = CONFIG.PRODUTOS.map((p) => {
+    const doProduto = STATE.chamados.filter((c) => c.produto === p.id);
+    const abertosProduto = doProduto.filter((c) => !["resolvido", "encerrado"].includes(c.status)).length;
+    return `<div class="crm-row"><div class="name">${p.nome}</div><div class="spacer"></div><div class="meta">${abertosProduto} em aberto · ${doProduto.length} no total</div></div>`;
+  }).join("");
+
+  // ---- tabela ----
+  const lista = chamadosFiltrados();
+  const tbody = document.getElementById("chamados-tbody");
+  document.getElementById("chamados-empty").hidden = lista.length > 0;
+  tbody.innerHTML = lista
+    .map((c) => `
+      <tr>
+        <td class="mono">${c.numero || "—"}</td>
+        <td>${c.empresa}</td>
+        <td>${CHAMADO_LABEL_PRODUTO[c.produto] || c.produto}</td>
+        <td>${c.assunto}</td>
+        <td><span style="color:${corPrioridade(c.prioridade)};font-weight:700;text-transform:capitalize">${c.prioridade}${chamadoForaDoPrazo(c) ? " · fora do prazo" : ""}</span></td>
+        <td><span class="badge ${c.status === "resolvido" || c.status === "encerrado" ? "ativo" : c.status === "aberto" ? "em_implantacao" : "inativo"}">${labelChamadoStatus(c.status)}</span></td>
+        <td>${fmtDataHoraCurta(c.criado_em)}</td>
+        <td><button class="btn small" data-ver-chamado="${c.id}">Ver</button></td>
+      </tr>`)
+    .join("");
+  tbody.querySelectorAll("[data-ver-chamado]").forEach((btn) =>
+    btn.addEventListener("click", () => abrirChamadoModal(btn.dataset.verChamado))
+  );
+}
+
+// ---- modal de detalhe ----
+const chamadoModal = document.getElementById("chamado-modal");
+document.getElementById("chamado-fechar")?.addEventListener("click", () => chamadoModal.close());
+
+function linkWhatsapp(telefone, mensagem) {
+  const numero = (telefone || "").replace(/\D/g, "");
+  return `https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`;
+}
+
+async function abrirChamadoModal(id) {
+  const c = STATE.chamados.find((x) => x.id === id);
+  if (!c) return;
+  STATE.chamadoAtualId = id;
+  document.getElementById("chamado-modal-numero").textContent = `${c.numero} · ${c.assunto}`;
+
+  const msgChegou = `Olá, ${c.solicitante}! Recebemos o seu chamado ${c.numero} sobre "${c.assunto}" e já estamos analisando. Vamos te manter atualizado por aqui.`;
+  const msgResolvido = `Olá, ${c.solicitante}! Seu chamado ${c.numero} foi resolvido. Qualquer coisa, é só chamar novamente. 🙂`;
+
+  const anexosHtml = (c.anexos || []).length
+    ? c.anexos.map((a) => `<div class="crm-row"><div class="name">${a.nome}</div><div class="spacer"></div><button class="btn small" data-baixar-anexo="${a.caminho}">Baixar</button></div>`).join("")
+    : `<div class="empty">Nenhum anexo.</div>`;
+
+  document.getElementById("chamado-modal-body").innerHTML = `
+    <div class="detail-grid" style="grid-template-columns:1fr 1fr;padding:0 0 8px">
+      <div class="detail-card"><h4>Empresa</h4><p>${c.empresa}</p></div>
+      <div class="detail-card"><h4>Solicitante</h4><p>${c.solicitante}<br><span class="mono" style="font-size:11px">${c.email} · ${c.telefone}</span></p></div>
+      <div class="detail-card"><h4>Produto / categoria</h4><p>${CHAMADO_LABEL_PRODUTO[c.produto] || c.produto} · ${c.categoria}</p></div>
+      <div class="detail-card"><h4>Origem</h4><p>${c.origem_sistema}</p></div>
+    </div>
+
+    <div class="field"><label>Descrição</label><p style="white-space:pre-wrap;font-size:13px">${c.descricao || "—"}</p></div>
+    ${c.mensagem_erro ? `<div class="field"><label>Mensagem de erro</label><p class="mono" style="font-size:12px">${c.mensagem_erro}</p></div>` : ""}
+    ${c.passos_reproducao ? `<div class="field"><label>Passos para reproduzir</label><p style="white-space:pre-wrap;font-size:13px">${c.passos_reproducao}</p></div>` : ""}
+
+    <div class="detail-grid" style="grid-template-columns:1fr 1fr 1fr">
+      <div class="field"><label>Status</label>
+        <select id="ch-edit-status">
+          ${CONFIG.CHAMADO_STATUS.map((s) => `<option value="${s}" ${s === c.status ? "selected" : ""}>${labelChamadoStatus(s)}</option>`).join("")}
+        </select>
+      </div>
+      <div class="field"><label>Prioridade</label>
+        <select id="ch-edit-prioridade">
+          ${CONFIG.CHAMADO_PRIORIDADES.map((p) => `<option value="${p}" ${p === c.prioridade ? "selected" : ""}>${p}</option>`).join("")}
+        </select>
+      </div>
+      <div class="field"><label>Responsável</label><input type="text" id="ch-edit-responsavel" value="${c.responsavel || ""}"></div>
+    </div>
+
+    <div class="detail-grid" style="grid-template-columns:1fr 1fr">
+      <div class="detail-card"><h4>Prazo 1ª resposta</h4><p>${fmtDataHoraCurta(c.prazo_primeira_resposta)}</p></div>
+      <div class="detail-card"><h4>Prazo de solução</h4><p>${fmtDataHoraCurta(c.prazo_solucao)}</p></div>
+    </div>
+
+    <div class="field" style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn small" id="ch-salvar-status">Salvar alterações</button>
+      <a class="btn small" target="_blank" rel="noopener" href="${linkWhatsapp(c.telefone, msgChegou)}">Avisar cliente (recebido)</a>
+      <a class="btn small" target="_blank" rel="noopener" href="${linkWhatsapp(c.telefone, msgResolvido)}">Avisar cliente (resolvido)</a>
+    </div>
+
+    <div class="panel-card" style="margin-top:8px"><h3>Anexos</h3>${anexosHtml}</div>
+  `;
+
+  document.getElementById("ch-salvar-status")?.addEventListener("click", async () => {
+    try {
+      await API.updateChamado(c.id, {
+        status: document.getElementById("ch-edit-status").value,
+        prioridade: document.getElementById("ch-edit-prioridade").value,
+        responsavel: document.getElementById("ch-edit-responsavel").value.trim() || null,
+      });
+      toast("Chamado atualizado.", "success");
+      chamadoModal.close();
+      loadAll();
+    } catch (err) {
+      toast(err.message, "error");
+    }
+  });
+
+  document.querySelectorAll("[data-baixar-anexo]").forEach((btn) =>
+    btn.addEventListener("click", async () => {
+      try {
+        const url = await API.getAnexoUrl(btn.dataset.baixarAnexo);
+        window.open(url, "_blank");
+      } catch (err) {
+        toast(err.message, "error");
+      }
+    })
+  );
+
+  chamadoModal.showModal();
 }

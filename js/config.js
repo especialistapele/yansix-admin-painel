@@ -23,10 +23,33 @@ const CONFIG = {
     CRMS: "crms",
     METRICAS: "crm_metrica_snapshot",
     ALERTAS: "alertas",
+    CHAMADOS: "chamados",
+    CHAMADO_MENSAGENS: "chamado_mensagens",
+    SLA_CONFIG: "sla_config",
+    PRODUTOS_CATALOGO: "produtos_catalogo",
   },
 
   STATUS_CLIENTE: ["ativo", "inativo", "em_implantacao"],
   STATUS_CRM: ["ativo", "suspenso", "em_implantacao"],
+
+  PRODUTOS: [
+    { id: "crm", nome: "CRM" },
+    { id: "website", nome: "Website" },
+    { id: "landpage", nome: "Landpage" },
+    { id: "showroom", nome: "Showroom" },
+    { id: "cashback", nome: "Cashback" },
+    { id: "estoque", nome: "Estoque" },
+    { id: "branding", nome: "Branding" },
+    { id: "consultoria", nome: "Consultoria" },
+    { id: "sistema_personalizado", nome: "Sistema Personalizado" },
+  ],
+  CHAMADO_STATUS: ["aberto", "em_analise", "aguardando_cliente", "em_atendimento", "em_desenvolvimento", "resolvido", "encerrado"],
+  CHAMADO_STATUS_LABELS: {
+    aberto: "Aberto", em_analise: "Em análise", aguardando_cliente: "Aguardando cliente",
+    em_atendimento: "Em atendimento", em_desenvolvimento: "Em desenvolvimento",
+    resolvido: "Resolvido", encerrado: "Encerrado",
+  },
+  CHAMADO_PRIORIDADES: ["baixa", "normal", "alta", "critica"],
 
   // Faixas de alerta de storage (%)
   ALERT_THRESHOLDS: { atencao: 70, critico: 85, acaoNecessaria: 95 },
