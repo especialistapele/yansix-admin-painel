@@ -79,6 +79,15 @@ alter table public.crms enable row level security;
 alter table public.crm_metrica_snapshot enable row level security;
 alter table public.alertas enable row level security;
 
+-- IMPORTANTE: RLS controla QUAIS linhas o usuário vê, mas o Postgres
+-- ainda exige a permissão básica de tabela por baixo disso. Sem este
+-- GRANT, todo pedido volta 403 mesmo com a policy certa.
+grant usage on schema public to authenticated;
+grant select, insert, update, delete on public.clientes to authenticated;
+grant select, insert, update, delete on public.crms to authenticated;
+grant select, insert, update, delete on public.crm_metrica_snapshot to authenticated;
+grant select, insert, update, delete on public.alertas to authenticated;
+
 create policy "admin acesso total - clientes"
   on public.clientes for all
   using (auth.uid() is not null)

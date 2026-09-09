@@ -248,6 +248,25 @@ create policy "admin gerencia chamado_mensagens" on public.chamado_mensagens
 -- (você, yansix.tech@gmail.com — mesmo padrão do schema_painel_central.sql),
 -- "to authenticated" aqui já restringe a gestão a você.
 
+-- ---------------------------------------------------------
+-- GRANT — RLS controla QUAIS linhas aparecem, mas o Postgres
+-- ainda exige a permissão básica de tabela por baixo disso.
+-- Sem isto, toda chamada volta 403 "permission denied" mesmo
+-- com as policies acima corretas (mesmo detalhe que pegou o
+-- schema_painel_central.sql da primeira vez).
+-- ---------------------------------------------------------
+grant select on public.produtos_catalogo to anon, authenticated;
+grant insert, update, delete on public.produtos_catalogo to authenticated;
+
+grant select on public.sla_config to anon, authenticated;
+grant insert, update, delete on public.sla_config to authenticated;
+
+grant insert on public.chamados to anon;
+grant select, insert, update, delete on public.chamados to authenticated;
+
+grant select, insert, update, delete on public.chamado_mensagens to authenticated;
+-- chamado_contador não recebe GRANT: só a função SECURITY DEFINER acessa.
+
 -- =========================================================
 -- ANEXOS (Storage) — bucket para os arquivos enviados junto
 -- com o chamado (screenshots, documentos etc.).
