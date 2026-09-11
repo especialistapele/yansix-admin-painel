@@ -102,6 +102,20 @@ setInterval(async () => {
   else showLogin();
 })();
 
+// recalcula os badges de SLA (que são baseados em "tempo até agora")
+// a cada minuto enquanto a tela de Chamados estiver aberta, sem nova
+// consulta ao banco — só reprocessa os dados já carregados em STATE.
+setInterval(() => {
+  if (document.getElementById("view-chamados")?.classList.contains("active")) {
+    renderChamados();
+    if (STATE.chamadoAtualId && chamadoModal.open) {
+      const slaEl = document.getElementById("chamado-modal-sla");
+      const c = STATE.chamados.find((x) => x.id === STATE.chamadoAtualId);
+      if (slaEl && c) slaEl.innerHTML = slaBadgeHtml(c);
+    }
+  }
+}, 60000);
+
 // =========================================================
 // NAVEGAÇÃO
 // =========================================================
@@ -157,6 +171,7 @@ async function loadAll() {
     falhas.push(`clientesProdutos: ${err.message || "erro desconhecido"}`);
   }
   renderDashboard(); renderClientes(); renderCrms(); renderMonitoramento(); preencherSelectClientes();
+  preencherFiltroClientesChamados();
   renderChamados(); renderContratos(); renderFinanceiro(); preencherSelectProdutos(); preencherSelectContratoFinanceiro(); renderCashback();
   if (falhas.length) {
     console.warn("Falhas no carregamento do painel:", falhas);
@@ -1237,6 +1252,62 @@ function chamadoForaDoPrazo(c) {
   if (c.status === "resolvido" && c.resolvido_em) return new Date(c.resolvido_em) > new Date(prazo);
   return new Date(prazo) < new Date();
 }
+
+// A partir de quantas horas restantes o SLA passa a ficar em alerta ("expirando").
+const SLA_LIMIAR_ATENCAO_HORAS = 4;
+
+function fmtDuracao(ms) {
+  const min = Math.round(Math.abs(ms) / 60000);
+  if (min < 1) return "menos de 1min";
+  if (min < 60) return `${min}min`;
+  const h = Math.floor(min / 60);
+  const restoMin = min % 60;
+  if (h < 24) return restoMin ? `${h}h${restoMin}min` : `${h}h`;
+  const dias = Math.floor(h / 24);
+  const restoH = h % 24;
+  return restoH ? `${dias}d ${restoH}h` : `${dias}d`;
+}
+
+// Calcula o estado do SLA de um chamado a partir de prazo_primeira_resposta /
+// prazo_solucao. Retorna { nivel, texto, curto }:
+//  - "ok"        -> dentro do prazo, com folga
+//  - "atencao"   -> ainda dentro do prazo, mas perto de vencer (< SLA_LIMIAR_ATENCAO_HORAS)
+//  - "expirado"  -> prazo já vencido (ou resolvido fora do prazo)
+//  - "sem_prazo" -> não há prazo configurado para esse chamado
+//  - "encerrado" -> chamado encerrado; SLA não se aplica mais (o status "encerrado"
+//                   já é filtrável separadamente no filtro de Status, então não é
+//                   misturado aqui com "sem prazo definido" — são duas coisas diferentes)
+// "texto" é a versão completa (usada no modal / tooltip); "curto" é a versão
+// compacta usada na coluna da tabela, pra não estourar a largura da tela.
+function slaInfo(c) {
+  if (c.status === "encerrado") return { nivel: "encerrado", texto: "Encerrado", curto: "Encerrado" };
+
+  if (c.status === "resolvido") {
+    if (!c.prazo_solucao) return { nivel: "sem_prazo", texto: "Resolvido (sem prazo definido)", curto: "Sem prazo" };
+    const referencia = c.resolvido_em || c.atualizado_em;
+    const noPrazo = new Date(referencia) <= new Date(c.prazo_solucao);
+    return noPrazo
+      ? { nivel: "ok", texto: "Resolvido dentro do prazo", curto: "Dentro do prazo" }
+      : { nivel: "expirado", texto: "Resolvido fora do prazo", curto: "Fora do prazo" };
+  }
+
+  const aindaSemResposta = !c.primeira_resposta_em;
+  const prazo = aindaSemResposta ? c.prazo_primeira_resposta : c.prazo_solucao;
+  const rotulo = aindaSemResposta ? "1ª resposta" : "solução";
+  if (!prazo) return { nivel: "sem_prazo", texto: "Sem prazo definido", curto: "Sem prazo" };
+
+  const diffMs = new Date(prazo) - new Date();
+  if (diffMs <= 0) return { nivel: "expirado", texto: `Prazo de ${rotulo} expirado há ${fmtDuracao(diffMs)}`, curto: `Expirado há ${fmtDuracao(diffMs)}` };
+  if (diffMs <= SLA_LIMIAR_ATENCAO_HORAS * 3600000) return { nivel: "atencao", texto: `Prazo de ${rotulo} vence em ${fmtDuracao(diffMs)}`, curto: `Vence em ${fmtDuracao(diffMs)}` };
+  return { nivel: "ok", texto: `Prazo de ${rotulo} vence em ${fmtDuracao(diffMs)}`, curto: `Vence em ${fmtDuracao(diffMs)}` };
+}
+
+function slaBadgeHtml(c, opts = {}) {
+  const info = slaInfo(c);
+  const classe = { ok: "sla-ok", atencao: "sla-atencao", expirado: "sla-expirado", sem_prazo: "sla-sem_prazo", encerrado: "sla-encerrado" }[info.nivel];
+  const rotulo = opts.compact ? info.curto : info.texto;
+  return `<span class="badge ${classe}" title="${esc(info.texto)}">${esc(rotulo)}</span>`;
+}
 function fmtDataHoraCurta(iso) {
   if (!iso) return "—";
   return new Date(iso).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
@@ -1251,7 +1322,7 @@ function fmtDataHoraCurta(iso) {
   CONFIG.CHAMADO_STATUS.forEach((s) =>
     selStatus.insertAdjacentHTML("beforeend", `<option value="${s}">${labelChamadoStatus(s)}</option>`)
   );
-  ["ch-filtro-busca", "ch-filtro-produto", "ch-filtro-status", "ch-filtro-prioridade"].forEach((id) =>
+  ["ch-filtro-busca", "ch-filtro-produto", "ch-filtro-cliente", "ch-filtro-status", "ch-filtro-prioridade", "ch-filtro-sla"].forEach((id) =>
     document.getElementById(id).addEventListener("input", renderChamados)
   );
 })();
@@ -1271,10 +1342,12 @@ function chamadosFiltrados() {
   const produto = document.getElementById("ch-filtro-produto")?.value || "";
   const status = document.getElementById("ch-filtro-status")?.value || "";
   const prioridade = document.getElementById("ch-filtro-prioridade")?.value || "";
+  const slaFiltro = document.getElementById("ch-filtro-sla")?.value || "";
   return STATE.chamados.filter((c) => {
     if (produto && c.produto !== produto) return false;
     if (status && c.status !== status) return false;
     if (prioridade && c.prioridade !== prioridade) return false;
+    if (slaFiltro && slaInfo(c).nivel !== slaFiltro) return false;
     const clienteId = document.getElementById("ch-filtro-cliente")?.value || "";
     if (clienteId && c.cliente_id !== clienteId) return false;
     if (busca) {
@@ -1341,11 +1414,13 @@ function renderChamados() {
         <td>${c.empresa}</td>
         <td>${CHAMADO_LABEL_PRODUTO[c.produto] || c.produto}</td>
         <td>${c.assunto}</td>
-        <td><span style="color:${corPrioridade(c.prioridade)};font-weight:700;text-transform:capitalize">${c.prioridade}${chamadoForaDoPrazo(c) ? " · fora do prazo" : ""}</span></td>
-        <td><span class="badge ${c.status === "resolvido" || c.status === "encerrado" ? "ativo" : c.status === "aberto" ? "em_implantacao" : "inativo"}">${labelChamadoStatus(c.status)}</span></td>
+        <td><span style="color:${corPrioridade(c.prioridade)};font-weight:700;text-transform:capitalize">${c.prioridade}</span></td>
+        <td><select class="compact-select" data-chamado-status="${c.id}">${CONFIG.CHAMADO_STATUS.map((s) => `<option value="${s}" ${s === c.status ? "selected" : ""}>${labelChamadoStatus(s)}</option>`).join("")}</select></td>
+        <td>${slaBadgeHtml(c, { compact: true })}</td>
         <td>${fmtDataHoraCurta(c.criado_em)}</td>
         <td style="max-width:240px"><span style="white-space:pre-wrap">${esc(c.resolucao || "—")}</span></td>
         <td style="white-space:nowrap">
+          ${!["resolvido", "encerrado"].includes(c.status) ? `<button class="btn small" data-resolver-chamado="${c.id}">Resolver</button>` : ""}
           <button class="btn small" data-anotar-resolucao="${c.id}">Anotar</button>
           <button class="btn small" data-whatsapp-resolucao="${c.id}">WhatsApp</button>
           <button class="btn small" data-ver-chamado="${c.id}">Ver</button>
@@ -1355,6 +1430,20 @@ function renderChamados() {
   tbody.querySelectorAll("[data-ver-chamado]").forEach((btn) =>
     btn.addEventListener("click", () => abrirChamadoModal(btn.dataset.verChamado))
   );
+  tbody.querySelectorAll("[data-chamado-status]").forEach((sel) => sel.addEventListener("change", async () => {
+    const id = sel.dataset.chamadoStatus;
+    const c = STATE.chamados.find((x) => x.id === id);
+    try { await API.updateChamado(id, { status: sel.value }); toast("Status do chamado atualizado.", "success"); await loadAll(); }
+    catch (err) { toast(err.message, "error"); if (c) sel.value = c.status; }
+  }));
+  tbody.querySelectorAll("[data-resolver-chamado]").forEach(btn => btn.addEventListener("click", async () => {
+    const c=STATE.chamados.find(x=>x.id===btn.dataset.resolverChamado); if(!c)return;
+    const resolucao=prompt(`Descreva a resolução do chamado ${c.numero} para marcá-lo como Resolvido:`, c.resolucao||"");
+    if(resolucao===null)return;
+    if(!resolucao.trim())return toast("Digite a resolução antes de marcar como resolvido.","error");
+    try{await API.updateChamado(c.id,{status:"resolvido",resolucao:resolucao.trim()});toast("Chamado marcado como resolvido.","success");await loadAll();}
+    catch(err){toast(err.message,"error");}
+  }));
   tbody.querySelectorAll("[data-anotar-resolucao]").forEach(btn => btn.addEventListener("click", async () => {
     const c=STATE.chamados.find(x=>x.id===btn.dataset.anotarResolucao); if(!c)return;
     const resolucao=prompt(`Resolução do chamado ${c.numero}:`, c.resolucao||"");
@@ -1436,6 +1525,8 @@ async function abrirChamadoModal(id) {
   if (!c) return;
   STATE.chamadoAtualId = id;
   document.getElementById("chamado-modal-numero").textContent = `${c.numero} · ${c.assunto}`;
+  const slaEl = document.getElementById("chamado-modal-sla");
+  if (slaEl) slaEl.innerHTML = slaBadgeHtml(c);
 
   const msgChegou = `Olá, ${c.solicitante}! Recebemos o seu chamado ${c.numero} sobre "${c.assunto}" e já estamos analisando. Vamos te manter atualizado por aqui.`;
   const msgResolvido = `Olá, ${c.solicitante}! Seu chamado ${c.numero} foi resolvido. Qualquer coisa, é só chamar novamente. 🙂`;

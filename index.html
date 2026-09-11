@@ -269,21 +269,31 @@
         <div class="toolbar-row" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
           <input type="text" id="ch-filtro-busca" placeholder="Buscar empresa, assunto, número..." style="flex:1;min-width:220px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel-alt)">
           <select id="ch-filtro-produto" style="padding:9px;border:1px solid var(--line);border-radius:8px;background:var(--panel-alt)"><option value="">Todos os produtos</option></select>
+          <select id="ch-filtro-cliente" style="padding:9px;border:1px solid var(--line);border-radius:8px;background:var(--panel-alt)"><option value="">Todos os clientes</option></select>
           <select id="ch-filtro-status" style="padding:9px;border:1px solid var(--line);border-radius:8px;background:var(--panel-alt)"><option value="">Todos os status</option></select>
           <select id="ch-filtro-prioridade" style="padding:9px;border:1px solid var(--line);border-radius:8px;background:var(--panel-alt)">
             <option value="">Toda prioridade</option>
             <option value="critica">Crítica</option><option value="alta">Alta</option><option value="normal">Normal</option><option value="baixa">Baixa</option>
           </select>
+          <select id="ch-filtro-sla" style="padding:9px;border:1px solid var(--line);border-radius:8px;background:var(--panel-alt)">
+            <option value="">Todo SLA</option>
+            <option value="expirado">Expirado</option>
+            <option value="atencao">Expirando</option>
+            <option value="ok">No prazo</option>
+            <option value="sem_prazo">Sem prazo definido</option>
+          </select>
         </div>
       </div>
 
       <div class="panel-card">
+        <div class="table-responsive">
         <table>
           <thead>
-            <tr><th>Número</th><th>Empresa</th><th>Produto</th><th>Assunto</th><th>Prioridade</th><th>Status</th><th>Aberto em</th><th>Resolução</th><th>Ações</th></tr>
+            <tr><th>Número</th><th>Empresa</th><th>Produto</th><th>Assunto</th><th>Prioridade</th><th>Status</th><th>SLA</th><th>Aberto em</th><th>Resolução</th><th>Ações</th></tr>
           </thead>
           <tbody id="chamados-tbody"></tbody>
         </table>
+        </div>
         <div id="chamados-empty" class="empty" hidden>Nenhum chamado encontrado.</div>
       </div>
     </section>
@@ -443,7 +453,10 @@
      MODAL: DETALHE DO CHAMADO
 ========================================================= -->
 <dialog id="chamado-modal" style="max-width:640px">
-  <div class="modal-head"><h3 id="chamado-modal-numero">Chamado</h3></div>
+  <div class="modal-head" style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+    <h3 id="chamado-modal-numero">Chamado</h3>
+    <span id="chamado-modal-sla"></span>
+  </div>
   <div class="modal-body" id="chamado-modal-body" style="max-height:70vh;overflow:auto"></div>
   <div class="modal-foot">
     <button type="button" class="btn" id="chamado-fechar">Fechar</button>

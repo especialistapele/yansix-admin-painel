@@ -224,6 +224,12 @@ tr:hover td{background:var(--panel-alt)}
 .badge.inativo,.badge.suspenso{background:var(--panel-alt);color:var(--muted)}
 .badge.em_implantacao{background:var(--amber-bg);color:var(--amber)}
 
+/* ===== badges de SLA (chamados) ===== */
+.badge.sla-ok{background:var(--green-bg);color:var(--green)}
+.badge.sla-atencao{background:var(--amber-bg);color:var(--amber)}
+.badge.sla-expirado{background:var(--red-bg);color:var(--red)}
+.badge.sla-sem_prazo,.badge.sla-encerrado{background:var(--panel-alt);color:var(--muted)}
+
 /* ===== modal (dialog nativo) ===== */
 dialog{
   border:1px solid var(--line);border-radius:16px;
@@ -233,7 +239,8 @@ dialog{
 }
 dialog::backdrop{background:rgba(33,28,58,0.35)}
 .modal-head{padding:20px 24px;border-bottom:1px solid var(--line)}
-.modal-head h3{font-size:16px}
+.modal-head h3{font-size:16px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.modal-head #chamado-modal-sla{flex:none}
 .modal-body{padding:20px 24px;max-height:60vh;overflow-y:auto}
 .modal-foot{padding:16px 24px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:10px}
 
