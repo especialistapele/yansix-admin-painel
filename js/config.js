@@ -27,6 +27,13 @@ const CONFIG = {
     CHAMADO_MENSAGENS: "chamado_mensagens",
     SLA_CONFIG: "sla_config",
     PRODUTOS_CATALOGO: "produtos_catalogo",
+    CLIENTE_PRODUTOS: "cliente_produtos",
+    PLANOS: "planos",
+    CONTRATOS: "contratos",
+    FINANCEIRO: "financeiro_lancamentos",
+    CHAMADO_HISTORICO: "chamado_historico",
+    CONTRATO_DOCUMENTOS: "contrato_documentos",
+    AUDITORIA: "auditoria_eventos",
   },
 
   STATUS_CLIENTE: ["ativo", "inativo", "em_implantacao"],

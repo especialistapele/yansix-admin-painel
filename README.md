@@ -89,3 +89,31 @@ sql/schema_painel_central.sql   <- já aplicado; fica aqui como referência
 - RLS habilitado em todas as tabelas do painel: exige usuário autenticado
   neste projeto, e como só existe um usuário cadastrado, isso já
   restringe o acesso a você.
+
+
+## Fase 8 — Comercial, Financeiro e Dashboard
+- CRM e Cashback possuem planos ativos Mensal/Trimestral/Anual com os valores definidos na especificação.
+- Demais produtos possuem Plano padrão para vendas por orçamento.
+- Contratos armazenam condição, entrada, restante, forma de pagamento, comissão e manutenção mensal.
+- Financeiro aceita status Parcial.
+- Dashboard calcula Valores de Manutenção, CRM Mensal e Cashback a partir dos contratos ativos.
+- Cards recorrentes abrem a composição por cliente.
+- Formulário público cria chamados via RPC segura e tenta vincular Cliente → Produto por e-mail/telefone.
+- Cliente permite editar dados e produtos vinculados.
+
+
+## Fase 12 — Confecção e numeração automática de contratos
+- Dashboard: card **Confecção (Único)**, considerando contratos ativos cujo plano contém “Confecção” e cuja periodicidade é `unico`. Não é somado como receita mensal.
+- O detalhe do card mostra cliente, produto, plano, valor e data de início.
+- Contratos novos recebem número automaticamente no banco no formato `CTR-AAAA-NNNN`.
+- Contratos antigos que estavam sem número foram regularizados sem exclusão de dados.
+- `contratos.numero` passou a ser obrigatório e possui índice único.
+- O frontend não permite digitação manual do número; a origem oficial da numeração é o banco.
+
+
+## Fase 13 — Auditoria e documentos de contratos
+- Bucket privado `contratos-documentos` no Supabase Storage.
+- Upload, download por URL assinada, substituição e exclusão de documento do contrato.
+- Documento vinculado diretamente ao contrato, não ao cliente.
+- Auditoria de INSERT/UPDATE/DELETE em clientes, contratos, financeiro e pagamentos.
+- Novas tabelas: `contrato_documentos` e `auditoria_eventos`.

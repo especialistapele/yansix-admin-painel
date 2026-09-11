@@ -50,10 +50,14 @@
     <div class="brand"><span class="dot"></span> YANSIX Central</div>
     <a class="nav-link active" data-view="dashboard"><span class="nav-ico"></span> Dashboard</a>
     <a class="nav-link" data-view="clientes"><span class="nav-ico"></span> Clientes</a>
-    <a class="nav-link" data-view="crms"><span class="nav-ico"></span> CRMs</a>
+    <a class="nav-link" data-view="crms"><span class="nav-ico"></span> CRM</a>
+    <a class="nav-link" data-view="cashback"><span class="nav-ico"></span> Cashback</a>
+    <a class="nav-link" data-view="contratos"><span class="nav-ico"></span> Contratos</a>
+    <a class="nav-link" data-view="financeiro"><span class="nav-ico"></span> Financeiro</a>
     <a class="nav-link" data-view="monitoramento"><span class="nav-ico"></span> Monitoramento</a>
     <a class="nav-link" data-view="chamados"><span class="nav-ico"></span> Central de Chamados</a>
     <div class="sidebar-footer">
+      <div class="account-badge" title="Sessão autenticada"><span class="account-dot"></span><span id="current-user-email">Sessão autenticada</span></div>
       <button class="btn-logout" id="btn-logout">Sair</button>
     </div>
   </nav>
@@ -77,6 +81,16 @@
       </div>
 
       <div class="panel-card">
+        <h3>Receitas</h3>
+        <div class="stat-grid" style="grid-template-columns:repeat(auto-fit,minmax(190px,1fr))">
+          <button class="stat-card clickable-card" id="dash-card-manutencao" type="button"><div class="label">Valores de Manutenção</div><div class="value mono" id="dash-manutencao">R$ 0,00/mês</div></button>
+          <button class="stat-card clickable-card" id="dash-card-crm" type="button"><div class="label">CRM Mensal</div><div class="value mono" id="dash-crm-mensal">R$ 0,00</div></button>
+          <button class="stat-card clickable-card" id="dash-card-cashback" type="button"><div class="label">Cashback</div><div class="value mono" id="dash-cashback-mensal">R$ 0,00</div></button>
+          <button class="stat-card clickable-card" id="dash-card-confeccao" type="button"><div class="label">Confecção (Único)</div><div class="value mono" id="dash-confeccao">R$ 0,00</div></button>
+        </div>
+      </div>
+
+      <div class="panel-card">
         <h3>CRMs</h3>
         <div id="dashboard-crm-list"><div class="empty">Nenhum CRM cadastrado ainda.</div></div>
       </div>
@@ -96,14 +110,91 @@
         </div>
         <button class="btn primary" id="btn-novo-cliente">+ Novo cliente</button>
       </div>
-      <div class="panel-card">
-        <table>
+      <div class="panel-card client-table-card">
+        <div class="table-responsive">
+        <table class="clients-table">
           <thead>
-            <tr><th>Nome</th><th>Responsável</th><th>E-mail</th><th>Status</th><th>Criado em</th><th></th></tr>
+            <tr><th>Nome</th><th>Responsável</th><th>Produto</th><th>E-mail</th><th>Telefone</th><th>Status</th><th>Criado em</th><th>Ações</th></tr>
           </thead>
           <tbody id="clientes-tbody"></tbody>
         </table>
+        </div>
         <div id="clientes-empty" class="empty" hidden>Nenhum cliente cadastrado.</div>
+      </div>
+    </section>
+
+
+    <!-- ===================== CONTRATOS ===================== -->
+    <section class="view" id="view-contratos">
+      <div class="view-head">
+        <div>
+          <h2>Contratos & Planos</h2>
+          <p>Planos comerciais, contratos por produto e renovação.</p>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn" id="btn-novo-plano">+ Novo plano</button>
+          <button class="btn primary" id="btn-novo-contrato">+ Novo contrato</button>
+        </div>
+      </div>
+      <div class="toolbar">
+        <input id="contratos-busca-produto" type="search" placeholder="Buscar por produto..." style="min-width:220px">
+        <select id="contratos-filtro-produto"><option value="">Todos os produtos</option></select>
+        <button class="btn small" type="button" id="contratos-buscar-produto">Buscar</button>
+        <select id="contratos-filtro-status"><option value="">Todos os status</option><option value="ativo">Ativo</option><option value="suspenso">Suspenso</option><option value="encerrado">Encerrado</option><option value="cancelado">Cancelado</option><option value="rascunho">Rascunho</option></select>
+      </div>
+      <div class="panel-card">
+        <table>
+          <thead><tr><th>Número</th><th>Cliente</th><th>Produto</th><th>Plano</th><th>Valor</th><th>Renovação</th><th>Status</th><th></th></tr></thead>
+          <tbody id="contratos-tbody"></tbody>
+        </table>
+        <div id="contratos-empty" class="empty" hidden>Nenhum contrato cadastrado.</div>
+      </div>
+      <div class="panel-card">
+        <h3>Planos cadastrados</h3>
+        <div id="planos-list"><div class="empty">Nenhum plano cadastrado.</div></div>
+      </div>
+    </section>
+
+    <!-- ===================== FINANCEIRO ===================== -->
+    <section class="view" id="view-financeiro">
+      <div class="view-head">
+        <div>
+          <h2>Financeiro</h2>
+          <p>Recebimentos, vencimentos e histórico financeiro por produto.</p>
+        </div>
+        <button class="btn primary" id="btn-novo-lancamento">+ Novo lançamento</button>
+      </div>
+      <div class="stat-grid finance-stat-grid">
+        <div class="stat-card"><div class="label">Previsto</div><div class="value mono" id="fin-previsto">R$ 0,00</div></div>
+        <div class="stat-card"><div class="label">Recebido</div><div class="value mono" id="fin-pago">R$ 0,00</div></div>
+        <div class="stat-card"><div class="label">Em aberto</div><div class="value mono" id="fin-pendente">R$ 0,00</div></div>
+        <div class="stat-card"><div class="label">Em atraso</div><div class="value mono" id="fin-atrasado">R$ 0,00</div></div>
+        <div class="stat-card"><div class="label">Vence hoje</div><div class="value mono" id="fin-hoje">R$ 0,00</div></div>
+        <div class="stat-card"><div class="label">Próximos 7 dias</div><div class="value mono" id="fin-7dias">R$ 0,00</div></div>
+      </div>
+      <div class="panel-card finance-resumo" id="financeiro-resumo-mes">
+        <h3>Resumo do mês</h3>
+        <div class="detail-grid">
+          <div class="detail-card"><h4>Previsto no mês</h4><p id="fin-mes-previsto">R$ 0,00</p></div>
+          <div class="detail-card"><h4>Recebido no mês</h4><p id="fin-mes-recebido">R$ 0,00</p></div>
+          <div class="detail-card"><h4>Saldo em aberto</h4><p id="fin-mes-aberto">R$ 0,00</p></div>
+        </div>
+      </div>
+      <div class="toolbar finance-toolbar">
+        <input id="financeiro-busca-cliente" type="search" placeholder="Buscar cliente..." style="min-width:200px">
+        <select id="financeiro-filtro-produto"><option value="">Todos os produtos</option></select>
+        <select id="financeiro-filtro-status"><option value="">Todos os status</option><option value="pago">Pago</option><option value="pendente">Pendente</option><option value="em_atraso">Em atraso</option><option value="parcial">Parcial</option><option value="cancelado">Cancelado</option></select>
+        <input id="financeiro-data-inicio" type="date" title="Vencimento inicial">
+        <input id="financeiro-data-fim" type="date" title="Vencimento final">
+        <select id="financeiro-periodo-rapido"><option value="">Todo o período</option><option value="hoje">Hoje</option><option value="7dias">Próximos 7 dias</option><option value="mes">Este mês</option><option value="atrasados">Em atraso</option></select>
+        <button class="btn small" type="button" id="financeiro-limpar-filtros">Limpar</button>
+      </div>
+      <div class="panel-card">
+        <table>
+          <thead><tr><th>Cliente</th><th>Produto</th><th>Plano/Tipo</th><th>Vencimento</th><th>Valor</th><th>Entrada</th><th>Restante</th><th>Status</th><th></th></tr></thead>
+          <tbody id="financeiro-tbody"></tbody>
+        </table>
+        <div id="financeiro-empty" class="empty" hidden>Nenhum lançamento financeiro cadastrado.</div>
       </div>
     </section>
 
@@ -127,6 +218,14 @@
       </div>
     </section>
 
+    <!-- ===================== CASHBACK ===================== -->
+    <section class="view" id="view-cashback">
+      <div class="view-head"><div><h2>Cashback</h2><p>Clientes, contratos, planos e financeiro do produto Cashback.</p></div></div>
+      <div class="stat-grid"><div class="stat-card"><div class="label">Clientes</div><div class="value mono" id="cb-clientes">0</div></div><div class="stat-card"><div class="label">Contratos ativos</div><div class="value mono" id="cb-contratos">0</div></div><div class="stat-card"><div class="label">Recebido</div><div class="value mono" id="cb-pago">R$ 0,00</div></div><div class="stat-card"><div class="label">Em aberto</div><div class="value mono" id="cb-aberto">R$ 0,00</div></div></div>
+      <div class="toolbar"><input id="cb-busca" placeholder="Buscar cliente..." style="min-width:240px;flex:1"><select id="cb-status"><option value="">Todos os status</option><option value="ativo">Ativo</option><option value="implantacao">Implantação</option><option value="inativo">Inativo</option><option value="cancelado">Cancelado</option></select><select id="cb-periodicidade"><option value="">Todas as periodicidades</option><option value="mensal">Mensal</option><option value="trimestral">Trimestral</option><option value="anual">Anual</option></select></div>
+      <div class="panel-card"><table><thead><tr><th>Empresa</th><th>Responsável</th><th>Contato</th><th>Plano</th><th>Início</th><th>Renovação</th><th>Status</th><th></th></tr></thead><tbody id="cb-tbody"></tbody></table><div id="cb-empty" class="empty" hidden>Nenhum cliente de Cashback encontrado.</div></div>
+    </section>
+
     <!-- ===================== MONITORAMENTO ===================== -->
     <section class="view" id="view-monitoramento">
       <div class="view-head">
@@ -147,16 +246,18 @@
           <h2>Central de Chamados</h2>
           <p>Suporte de todos os produtos do ecossistema YANSIX, num só lugar.</p>
         </div>
-        <button class="btn" id="btn-copiar-link-chamado">Copiar link do formulário</button>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" id="btn-novo-chamado">+ Novo chamado</button><button class="btn" id="btn-copiar-link-chamado">Copiar link do formulário</button></div>
       </div>
 
-      <div class="stat-grid" id="chamados-stat-grid" style="grid-template-columns:repeat(6,1fr)">
+      <div class="stat-grid" id="chamados-stat-grid" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr))">
         <div class="stat-card"><div class="label">Abertos</div><div class="value mono" id="ch-stat-aberto">0</div></div>
         <div class="stat-card"><div class="label">Em atendimento</div><div class="value mono" id="ch-stat-atendimento">0</div></div>
         <div class="stat-card"><div class="label">Críticos</div><div class="value mono" id="ch-stat-critico">0</div></div>
         <div class="stat-card"><div class="label">Aguard. cliente</div><div class="value mono" id="ch-stat-aguardando">0</div></div>
         <div class="stat-card"><div class="label">Resolvidos</div><div class="value mono" id="ch-stat-resolvido">0</div></div>
+        <div class="stat-card"><div class="label">Encerrados</div><div class="value mono" id="ch-stat-encerrado">0</div></div>
         <div class="stat-card"><div class="label">Fora do prazo</div><div class="value mono" id="ch-stat-atrasado">0</div></div>
+        <div class="stat-card"><div class="label">SLA no prazo</div><div class="value mono" id="ch-stat-sla">0%</div></div>
       </div>
 
       <div class="panel-card">
@@ -179,7 +280,7 @@
       <div class="panel-card">
         <table>
           <thead>
-            <tr><th>Número</th><th>Empresa</th><th>Produto</th><th>Assunto</th><th>Prioridade</th><th>Status</th><th>Aberto em</th><th></th></tr>
+            <tr><th>Número</th><th>Empresa</th><th>Produto</th><th>Assunto</th><th>Prioridade</th><th>Status</th><th>Aberto em</th><th>Resolução</th><th>Ações</th></tr>
           </thead>
           <tbody id="chamados-tbody"></tbody>
         </table>
@@ -195,11 +296,19 @@
 ========================================================= -->
 <dialog id="cliente-modal">
   <form id="cliente-form">
-    <div class="modal-head"><h3>Novo cliente</h3></div>
+    <div class="modal-head"><h3 id="cliente-modal-titulo">Novo cliente</h3></div>
     <div class="modal-body">
       <div class="field"><label>Nome da empresa</label><input type="text" id="cliente-nome" required></div>
       <div class="field"><label>Responsável</label><input type="text" id="cliente-responsavel"></div>
       <div class="field"><label>E-mail</label><input type="email" id="cliente-email"></div>
+      <div class="field"><label>Telefone / WhatsApp</label><input type="text" id="cliente-telefone" placeholder="(22) 99999-9999"></div>
+      <div class="field">
+        <label>Produtos / serviços vinculados</label>
+        <div class="hint">Selecione todos os produtos que este cliente possui. Essa relação será usada para organizar contratos, financeiro e chamados por produto.</div>
+        <div id="cliente-produtos-grid" class="client-products-grid"></div>
+        <div class="hint" style="margin-top:8px">Ao selecionar um produto, escolha o plano. Quando o plano não tiver valor definido, informe o valor manualmente. O sistema cria o vínculo do produto e um contrato em rascunho para preservar essa escolha.</div>
+      </div>
+      <div class="field"><label>Observações</label><textarea id="cliente-observacoes" rows="3"></textarea></div>
     </div>
     <div class="modal-foot">
       <button type="button" class="btn" id="cliente-cancelar">Cancelar</button>
@@ -209,11 +318,55 @@
 </dialog>
 
 <!-- =========================================================
+     MODAL: CLIENTE 360
+========================================================= -->
+<dialog id="cliente-360-modal" style="max-width:920px">
+  <div class="modal-head"><h3 id="cliente-360-titulo">Cliente 360</h3></div>
+  <div class="modal-body" id="cliente-360-body" style="max-height:76vh;overflow:auto"></div>
+  <div class="modal-foot"><button type="button" class="btn" id="cliente-360-fechar">Fechar</button></div>
+</dialog>
+
+<dialog id="cliente-produto-modal">
+  <form id="cliente-produto-form">
+    <div class="modal-head"><h3>Vincular produto ao cliente</h3></div>
+    <div class="modal-body">
+      <div class="field"><label>Produto</label><select id="cp-produto" required></select></div>
+      <div class="field"><label>Plano</label><select id="cp-plano" required></select></div>
+      <div class="field"><label>Valor contratado</label><input type="number" step="0.01" min="0" id="cp-valor" required></div>
+      <div class="detail-grid" style="grid-template-columns:1fr 1fr">
+        <div class="field"><label>Status</label><select id="cp-status"><option value="ativo">Ativo</option><option value="implantacao">Em implantação</option><option value="inativo">Inativo</option><option value="cancelado">Cancelado</option></select></div>
+        <div class="field"><label>Início</label><input type="date" id="cp-inicio" required></div>
+      </div>
+      <div class="field"><label>Observações</label><textarea id="cp-observacoes" rows="3"></textarea></div>
+    </div>
+    <div class="modal-foot"><button type="button" class="btn" id="cp-fechar">Cancelar</button><button type="submit" class="btn primary">Vincular produto</button></div>
+  </form>
+</dialog>
+
+<dialog id="contrato-documento-modal" style="max-width:680px">
+  <form id="contrato-documento-form">
+    <div class="modal-head"><h3 id="contrato-documento-titulo">Documento do contrato</h3></div>
+    <div class="modal-body">
+      <div id="contrato-documento-atual" class="panel-card" style="margin:0 0 14px"></div>
+      <div class="field"><label>Arquivo do contrato</label><input id="contrato-documento-arquivo" type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png" required></div>
+      <p class="meta">PDF, DOC, DOCX, JPG ou PNG · máximo 20 MB. Ao enviar um novo contrato, o documento anterior será substituído.</p>
+    </div>
+    <div class="modal-foot"><button type="button" class="btn" id="contrato-documento-fechar">Cancelar</button><button type="submit" class="btn primary" id="contrato-documento-enviar">Enviar contrato</button></div>
+  </form>
+</dialog>
+
+<dialog id="financeiro-situacao-modal" style="max-width:760px">
+  <div class="modal-head"><h3 id="financeiro-situacao-titulo">Situação financeira</h3></div>
+  <div class="modal-body" id="financeiro-situacao-body"></div>
+  <div class="modal-foot"><button type="button" class="btn" id="financeiro-situacao-fechar">Fechar</button></div>
+</dialog>
+
+<!-- =========================================================
      MODAL: CADASTRAR CRM (para monitoramento)
 ========================================================= -->
 <dialog id="crm-modal">
   <form id="crm-form">
-    <div class="modal-head"><h3>Cadastrar CRM</h3></div>
+    <div class="modal-head"><h3 id="crm-modal-titulo">Cadastrar CRM</h3></div>
     <div class="modal-body">
       <p class="sub" style="margin:0 0 16px">Isso só registra o CRM para o painel poder monitorá-lo — não cria nem publica nada.</p>
       <div class="field">
@@ -224,6 +377,7 @@
       <div class="field"><label>URL pública do CRM</label><input type="text" id="crm-url" placeholder="https://www.yansix.tech/crm_empresa_a/"></div>
       <div class="field"><label>Supabase URL (do projeto deste cliente)</label><input type="text" id="crm-supabase-url" placeholder="https://xxxx.supabase.co" required></div>
       <div class="field"><label>Supabase anon key (do projeto deste cliente)</label><input type="text" id="crm-supabase-key" required></div>
+      <div class="field"><label>Status</label><select id="crm-status"><option value="ativo">Ativo</option><option value="suspenso">Suspenso</option><option value="em_implantacao">Em implantação</option></select></div>
     </div>
     <div class="modal-foot">
       <button type="button" class="btn" id="crm-fechar">Fechar</button>
@@ -255,6 +409,37 @@
 </dialog>
 
 <!-- =========================================================
+     MODAL: NOVO CHAMADO
+========================================================= -->
+<dialog id="novo-chamado-modal" style="max-width:720px">
+  <form id="novo-chamado-form">
+    <div class="modal-head"><h3>Novo chamado</h3></div>
+    <div class="modal-body">
+      <div class="detail-grid" style="grid-template-columns:1fr 1fr">
+        <div class="field"><label>Cliente</label><select id="novo-chamado-cliente"></select></div>
+        <div class="field"><label>Produto</label><select id="novo-chamado-produto" required></select></div>
+      </div>
+      <div class="detail-grid" style="grid-template-columns:1fr 1fr">
+        <div class="field"><label>Solicitante</label><input id="novo-chamado-solicitante" required></div>
+        <div class="field"><label>Telefone / WhatsApp</label><input id="novo-chamado-telefone" required></div>
+      </div>
+      <div class="detail-grid" style="grid-template-columns:1fr 1fr">
+        <div class="field"><label>E-mail</label><input type="email" id="novo-chamado-email" required></div>
+        <div class="field"><label>Prioridade</label><select id="novo-chamado-prioridade"></select></div>
+      </div>
+      <div class="field"><label>Assunto</label><input id="novo-chamado-assunto" required></div>
+      <div class="field"><label>Descrição</label><textarea id="novo-chamado-descricao" rows="5" required></textarea></div>
+      <div class="detail-grid" style="grid-template-columns:1fr 1fr">
+        <div class="field"><label>Categoria</label><input id="novo-chamado-categoria" placeholder="Suporte"></div>
+        <div class="field"><label>Responsável</label><input id="novo-chamado-responsavel"></div>
+      </div>
+      <div class="field"><label>Observações internas</label><textarea id="novo-chamado-observacoes" rows="3"></textarea></div>
+    </div>
+    <div class="modal-foot"><button type="button" class="btn" id="novo-chamado-cancelar">Cancelar</button><button type="submit" class="btn primary">Criar chamado</button></div>
+  </form>
+</dialog>
+
+<!-- =========================================================
      MODAL: DETALHE DO CHAMADO
 ========================================================= -->
 <dialog id="chamado-modal" style="max-width:640px">
@@ -265,9 +450,115 @@
   </div>
 </dialog>
 
+<!-- =========================================================
+     MODAL: PLANO
+========================================================= -->
+<dialog id="plano-modal">
+  <form id="plano-form">
+    <div class="modal-head"><h3 id="plano-modal-titulo">Novo plano</h3></div>
+    <div class="modal-body">
+      <div class="field"><label>Produto</label><select id="plano-produto" required></select></div>
+      <div class="field"><label>Nome do plano</label><input id="plano-nome" required placeholder="Ex.: Plano Profissional"></div>
+      <div class="detail-grid" style="grid-template-columns:1fr 1fr">
+        <div class="field"><label>Periodicidade</label><select id="plano-periodicidade"><option value="unico">Único</option><option value="mensal">Mensal</option><option value="trimestral">Trimestral</option><option value="anual">Anual</option></select></div>
+        <div class="field"><label>Valor padrão</label><input type="number" step="0.01" min="0" id="plano-valor" value="0"></div>
+      </div>
+      <div class="field"><label>Plano ativo</label><select id="plano-ativo"><option value="true">Sim</option><option value="false">Não</option></select></div>
+    </div>
+    <div class="modal-foot"><button type="button" class="btn" id="plano-fechar">Cancelar</button><button class="btn primary" type="submit">Salvar plano</button></div>
+  </form>
+</dialog>
+
+<!-- =========================================================
+     MODAL: CONTRATO
+========================================================= -->
+<dialog id="contrato-modal">
+  <form id="contrato-form">
+    <div class="modal-head"><h3 id="contrato-modal-titulo">Novo contrato</h3></div>
+    <div class="modal-body">
+      <div class="field"><label>Cliente</label><select id="contrato-cliente" required></select></div>
+      <div class="field"><label>Produto contratado</label><select id="contrato-cliente-produto" required></select></div>
+      <div class="field"><label>Plano</label><select id="contrato-plano" required></select></div>
+      <div class="detail-grid" style="grid-template-columns:1fr 1fr">
+        <div class="field"><label>Número do contrato</label><input id="contrato-numero" placeholder="Gerado automaticamente" readonly></div>
+        <div class="field"><label>Valor contratado</label><input type="number" step="0.01" min="0" id="contrato-valor" required></div>
+      </div>
+      <div class="detail-grid" style="grid-template-columns:1fr 1fr 1fr">
+        <div class="field"><label>Início</label><input type="date" id="contrato-inicio" required></div>
+        <div class="field"><label>Fim</label><input type="date" id="contrato-fim"></div>
+        <div class="field"><label>Próxima renovação</label><input type="date" id="contrato-renovacao"></div>
+      </div>
+      <div class="panel-card" style="margin:10px 0;padding:14px" id="contrato-assinatura-fields">
+        <h3 style="margin-top:0">Assinatura</h3>
+        <p class="meta">CRM e Cashback usam a periodicidade do plano selecionado.</p>
+      </div>
+      <div id="contrato-orcamento-fields">
+        <div class="detail-grid" style="grid-template-columns:1fr 1fr">
+          <div class="field"><label>Condição de pagamento</label><input id="contrato-condicao" placeholder="Ex.: 50% entrada + 50% na entrega"></div>
+          <div class="field"><label>Entrada</label><input type="number" step="0.01" min="0" id="contrato-entrada" value="0"></div>
+        </div>
+        <div class="detail-grid" style="grid-template-columns:1fr 1fr 1fr">
+          <div class="field"><label>Forma de pagamento</label><input id="contrato-forma" placeholder="PIX, cartão, boleto..."></div>
+          <div class="field"><label>Comissão de venda (%)</label><input type="number" step="0.01" min="0" id="contrato-comissao" value="0"></div>
+          <div class="field"><label>Restante</label><input type="number" step="0.01" id="contrato-restante" value="0" readonly></div>
+        </div>
+        <div class="detail-grid" style="grid-template-columns:1fr 1fr">
+          <div class="field"><label>Comissão calculada</label><input type="number" step="0.01" id="contrato-comissao-valor" value="0" readonly></div>
+          <div class="field"><label>Valor líquido</label><input type="number" step="0.01" id="contrato-liquido" value="0" readonly></div>
+        </div>
+        <div class="detail-grid" style="grid-template-columns:1fr 1fr">
+          <div class="field"><label>Possui manutenção mensal?</label><select id="contrato-manutencao"><option value="false">Não</option><option value="true">Sim</option></select></div>
+          <div class="field" id="contrato-manutencao-valor-wrap" hidden><label>Valor da manutenção mensal</label><input type="number" step="0.01" min="0" id="contrato-manutencao-valor" value="0"></div>
+        </div>
+      </div>
+      <div class="field"><label>Status</label><select id="contrato-status"><option value="rascunho">Rascunho</option><option value="ativo">Ativo</option><option value="suspenso">Suspenso</option><option value="encerrado">Encerrado</option><option value="cancelado">Cancelado</option></select></div>
+      <div class="field"><label>Observações</label><textarea id="contrato-observacoes" rows="3"></textarea></div>
+    </div>
+    <div class="modal-foot"><button type="button" class="btn" id="contrato-fechar">Cancelar</button><button class="btn primary" type="submit">Salvar contrato</button></div>
+  </form>
+</dialog>
+
+<!-- =========================================================
+     MODAL: LANÇAMENTO FINANCEIRO
+========================================================= -->
+<dialog id="financeiro-modal">
+  <form id="financeiro-form">
+    <div class="modal-head"><h3>Novo lançamento financeiro</h3></div>
+    <div class="modal-body">
+      <div class="field"><label>Contrato</label><select id="financeiro-contrato" required></select></div>
+      <div class="detail-grid" style="grid-template-columns:1fr 1fr">
+        <div class="field"><label>Período inicial</label><input type="date" id="financeiro-inicio" required></div>
+        <div class="field"><label>Período final</label><input type="date" id="financeiro-fim" required></div>
+      </div>
+      <div class="detail-grid" style="grid-template-columns:1fr 1fr 1fr">
+        <div class="field"><label>Vencimento</label><input type="date" id="financeiro-vencimento" required></div>
+        <div class="field"><label>Valor previsto</label><input type="number" step="0.01" min="0" id="financeiro-previsto" required></div>
+        <div class="field"><label>Valor pago</label><input type="number" step="0.01" min="0" id="financeiro-pago" value="0"></div>
+      </div>
+      <div class="detail-grid" style="grid-template-columns:1fr 1fr">
+        <div class="field"><label>Data do pagamento</label><input type="date" id="financeiro-data-pagamento"></div>
+        <div class="field"><label>Forma de pagamento</label><input id="financeiro-forma" placeholder="PIX, cartão, boleto..."></div>
+      </div>
+      <div class="field"><label>Status</label><select id="financeiro-status"><option value="pendente">Pendente</option><option value="parcial">Parcial</option><option value="pago">Pago</option><option value="em_atraso">Em atraso</option><option value="cancelado">Cancelado</option></select></div>
+      <div class="field"><label>Observações</label><textarea id="financeiro-observacoes" rows="3"></textarea></div>
+    </div>
+    <div class="modal-foot"><button type="button" class="btn" id="financeiro-fechar">Cancelar</button><button class="btn primary" type="submit">Salvar lançamento</button></div>
+  </form>
+</dialog>
+
+<!-- MODAL: DETALHES DE RECEITA -->
+<dialog id="receita-recorrente-modal" style="max-width:900px">
+  <div class="modal-head"><h3 id="receita-recorrente-titulo">Receita</h3></div>
+  <div class="modal-body">
+    <table><thead><tr><th>Cliente</th><th>Produto</th><th>Plano</th><th>Valor</th><th>Status</th><th>Vencimento</th></tr></thead><tbody id="receita-recorrente-body"></tbody></table>
+  </div>
+  <div class="modal-foot"><button type="button" class="btn" onclick="document.getElementById('receita-recorrente-modal').close()">Fechar</button></div>
+</dialog>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/config.js"></script>
-<script src="js/api.js"></script>
-<script src="js/app.js"></script>
+<script src="js/api.js?v=14.0"></script>
+<script src="js/app.js?v=14.0"></script>
+
 </body>
 </html>

@@ -390,7 +390,8 @@ form.addEventListener("submit", async (e) => {
       anexos.push({ nome: file.name, caminho, tipo: file.type || "outro", tamanho: file.size });
     }
 
-    // 2) grava o chamado
+    // 2) O vínculo Cliente -> Produto e a criação do chamado são feitos por RPC segura no banco.
+    // Isso evita que o formulário público precise de SELECT/INSERT direto em tabelas internas.
     const payload = {
       origem_sistema: origemSistema,
       empresa: document.getElementById("f-empresa").value.trim(),
@@ -419,20 +420,18 @@ form.addEventListener("submit", async (e) => {
       anexos,
     };
 
-    const { data, error } = await SUPABASE_CLIENT
-      .from("chamados")
-      .insert(payload)
-      .select("*")
-      .single();
+    const { data, error } = await SUPABASE_CLIENT.rpc("abrir_chamado_publico", { p_dados: payload });
     if (error) throw new Error(error.message);
+    const chamado = Array.isArray(data) ? data[0] : data;
+    if (!chamado?.id) throw new Error("O chamado não retornou um identificador válido.");
 
-    // 3) tela de confirmação
+    // 4) tela de confirmação
     document.getElementById("form-screen").style.display = "none";
     document.getElementById("confirm-screen").style.display = "block";
-    document.getElementById("confirm-numero").textContent = data.numero;
+    document.getElementById("confirm-numero").textContent = chamado.numero;
     const fmt = (iso) => iso ? new Date(iso).toLocaleString("pt-BR", { dateStyle:"short", timeStyle:"short" }) : "—";
-    document.getElementById("confirm-sla-resposta").textContent = fmt(data.prazo_primeira_resposta);
-    document.getElementById("confirm-sla-solucao").textContent = fmt(data.prazo_solucao);
+    document.getElementById("confirm-sla-resposta").textContent = fmt(chamado.prazo_primeira_resposta);
+    document.getElementById("confirm-sla-solucao").textContent = fmt(chamado.prazo_solucao);
 
   } catch (err) {
     showError(err.message || "Não foi possível abrir o chamado. Tente novamente.");
