@@ -1,5 +1,3 @@
-import { STATES } from "./engine.mjs";
-
 export function resolveServices(config, env = process.env) {
   return config.services.map((service) => {
     if (service.provider === "supabase") {
@@ -14,7 +12,7 @@ export function resolveServices(config, env = process.env) {
 
       return {
         ...service,
-        enabled: Boolean(service.enabled !== false && (managementReady || httpReady)),
+        enabled: Boolean(managementReady || httpReady),
         configurationState: managementReady || httpReady
           ? "ready"
           : "credentials_pending",
@@ -34,7 +32,7 @@ export function resolveServices(config, env = process.env) {
 
       return {
         ...service,
-        enabled: Boolean(service.enabled !== false && ready),
+        enabled: ready,
         configurationState: ready ? "ready" : "credentials_pending",
         uri,
         username,
@@ -59,15 +57,4 @@ export function configurationSummary(services) {
     enabled: service.enabled,
     configurationState: service.configurationState
   }));
-}
-
-export function configurationResult(service) {
-  return {
-    state: service.configurationState === "disabled"
-      ? STATES.CONFIGURATION_ERROR
-      : STATES.CONFIGURATION_ERROR,
-    reason: service.configurationState === "credentials_pending"
-      ? "credentials_pending"
-      : "service_disabled"
-  };
 }
