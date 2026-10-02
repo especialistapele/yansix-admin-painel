@@ -28,7 +28,7 @@ export function buildEvents(summary) {
   }));
 }
 
-export function toMarkdown(summary) {
+export function toMarkdown(summary, configuration = []) {
   const lines = [
     "# Watchdog — relatório de execução",
     "",
@@ -37,9 +37,19 @@ export function toMarkdown(summary) {
     `Gerada em: ${summary.generatedAt}`,
     `Total de serviços: ${summary.total}`,
     "",
-    "## Estados",
-    ""
+    "## Configuração",
+    "",
+    "| Serviço | Provedor | Habilitado | Configuração |",
+    "|---|---|---:|---|"
   ];
+
+  for (const item of configuration) {
+    lines.push(
+      `| ${item.name} | ${item.provider} | ${item.enabled ? "sim" : "não"} | ${item.configurationState} |`
+    );
+  }
+
+  lines.push("", "## Estados", "");
 
   for (const [state, count] of Object.entries(summary.counts)) {
     lines.push(`- **${state}**: ${count}`);
