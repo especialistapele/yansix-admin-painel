@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import { runChecks } from "./engine.mjs";
-import { summarize, toMarkdown } from "./report.mjs";
+import { buildEvents, summarize, toMarkdown } from "./report.mjs";
 
 const configPath = new URL("../config/services.example.json", import.meta.url);
 const config = JSON.parse(await fs.readFile(configPath, "utf8"));
@@ -25,10 +25,20 @@ const adapters = {
   )
 };
 
-const summary = summarize(await runChecks(services, adapters));
-console.log(JSON.stringify(summary, null, 2));
+const run = await runChecks(services, adapters);
+const summary = summarize(run);
+const events = buildEvents(summary);
+
+console.log(JSON.stringify({ summary, events }, null, 2));
+
 await fs.writeFile(
   new URL("../report.md", import.meta.url),
   toMarkdown(summary),
+  "utf8"
+);
+
+await fs.writeFile(
+  new URL("../report.json", import.meta.url),
+  JSON.stringify({ summary, events }, null, 2),
   "utf8"
 );
