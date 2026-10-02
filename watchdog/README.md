@@ -39,6 +39,6 @@ Sem Management API token, o adapter mantém um fallback HTTP usando a URL e a ch
 Os projetos Supabase cadastrados no inventário são referências públicas de projeto; nenhuma chave ou token é armazenado no repositório.
 
 ## v0
-A primeira versão é somente leitura. Ela pode ser executada manualmente no GitHub Actions sem nenhuma credencial configurada. Serviços sem configuração ficam como `configuration_error`, sem tentativa de recuperação.
+A primeira versão é somente leitura. Ela pode ser executada manualmente no GitHub Actions sem nenhuma credencial configurada. O resolvedor de configuração identifica cada serviço como `ready` ou `credentials_pending` sem imprimir valores sensíveis; serviços pendentes aparecem como `configuration_error` apenas para registrar a ausência de configuração, não como falha da infraestrutura. Não há tentativa de recuperação.
 
 Ainda não configuramos Secrets reais nem habilitamos execução agendada.
