@@ -1,0 +1,26 @@
+name: YANSIX Watchdog
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  watchdog:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run Watchdog v0
+        run: node watchdog/src/main.mjs
+
+      - name: Publish execution report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: watchdog-report
+          path: watchdog/report.md
+          if-no-files-found: warn
