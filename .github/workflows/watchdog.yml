@@ -16,9 +16,16 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Testes do Watchdog
-        run: node --test watchdog/tests/engine.test.mjs
+        run: |
+          node --test watchdog/tests/engine.test.mjs watchdog/tests/supabase.test.mjs
 
       - name: Executar Watchdog
+        env:
+          WATCHDOG_SUPABASE_ACCOUNT_1_TOKEN: ${{ secrets.WATCHDOG_SUPABASE_ACCOUNT_1_TOKEN }}
+          WATCHDOG_SUPABASE_ACCOUNT_2_TOKEN: ${{ secrets.WATCHDOG_SUPABASE_ACCOUNT_2_TOKEN }}
+          WATCHDOG_SUPABASE_ACCOUNT_3_TOKEN: ${{ secrets.WATCHDOG_SUPABASE_ACCOUNT_3_TOKEN }}
+          WATCHDOG_SUPABASE_ACCOUNT_4_TOKEN: ${{ secrets.WATCHDOG_SUPABASE_ACCOUNT_4_TOKEN }}
+          WATCHDOG_SUPABASE_ACCOUNT_5_TOKEN: ${{ secrets.WATCHDOG_SUPABASE_ACCOUNT_5_TOKEN }}
         run: node watchdog/src/main.mjs
 
       - name: Publicar relatório
