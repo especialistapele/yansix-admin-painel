@@ -1,0 +1,43 @@
+name: YANSIX Watchdog
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  watchdog:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Testes do Watchdog
+        run: |
+          node --test watchdog/tests/engine.test.mjs watchdog/tests/supabase.test.mjs watchdog/tests/config.test.mjs
+
+      - name: Executar Watchdog
+        env:
+          WATCHDOG_SUPABASE_ACCOUNT_1_TOKEN: ${{ secrets.WATCHDOG_SUPABASE_ACCOUNT_1_TOKEN }}
+          WATCHDOG_SUPABASE_ACCOUNT_2_TOKEN: ${{ secrets.WATCHDOG_SUPABASE_ACCOUNT_2_TOKEN }}
+          WATCHDOG_SUPABASE_ACCOUNT_3_TOKEN: ${{ secrets.WATCHDOG_SUPABASE_ACCOUNT_3_TOKEN }}
+          WATCHDOG_SUPABASE_ACCOUNT_4_TOKEN: ${{ secrets.WATCHDOG_SUPABASE_ACCOUNT_4_TOKEN }}
+          WATCHDOG_SUPABASE_ACCOUNT_5_TOKEN: ${{ secrets.WATCHDOG_SUPABASE_ACCOUNT_5_TOKEN }}
+          WATCHDOG_NEO4J_URI: ${{ secrets.WATCHDOG_NEO4J_URI }}
+          WATCHDOG_NEO4J_USERNAME: ${{ secrets.WATCHDOG_NEO4J_USERNAME }}
+          WATCHDOG_NEO4J_PASSWORD: ${{ secrets.WATCHDOG_NEO4J_PASSWORD }}
+          WATCHDOG_NEO4J_DATABASE: ${{ secrets.WATCHDOG_NEO4J_DATABASE }}
+        run: node watchdog/src/main.mjs
+
+      - name: Publicar relatório
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: watchdog-report
+          path: |
+            watchdog/report.md
+            watchdog/report.json
+          if-no-files-found: warn
