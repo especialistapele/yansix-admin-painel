@@ -21,9 +21,7 @@ export function classifyHttp(status) {
 
 export async function checkHttpService(service, fetchImpl = fetch) {
   const url = service.url;
-  if (!url) {
-    return { state: STATES.CONFIGURATION_ERROR, reason: "missing_url" };
-  }
+  if (!url) return { state: STATES.CONFIGURATION_ERROR, reason: "missing_url" };
 
   const started = performance.now();
   try {
@@ -77,7 +75,9 @@ export async function runChecks(services, adapters, execution = createExecutionC
     if (!service.enabled) {
       results.push(normalizeResult(service, {
         state: STATES.CONFIGURATION_ERROR,
-        reason: "disabled"
+        reason: service.configurationState === "credentials_pending"
+          ? "credentials_pending"
+          : "disabled"
       }, execution));
       continue;
     }
@@ -102,8 +102,5 @@ export async function runChecks(services, adapters, execution = createExecutionC
     }
   }
 
-  return {
-    execution,
-    results
-  };
+  return { execution, results };
 }
