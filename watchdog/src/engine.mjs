@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { performance } from "node:perf_hooks";
 
 export const STATES = Object.freeze({
@@ -48,38 +49,61 @@ export async function checkHttpService(service, fetchImpl = fetch) {
   }
 }
 
-export async function runChecks(services, adapters) {
+export function createExecutionContext() {
+  return {
+    executionId: randomUUID(),
+    startedAt: new Date().toISOString()
+  };
+}
+
+export function normalizeResult(service, result, execution) {
+  return {
+    executionId: execution.executionId,
+    serviceId: service.id,
+    name: service.name,
+    provider: service.provider,
+    state: result.state || STATES.UNKNOWN,
+    status: result.status ?? null,
+    latencyMs: result.latencyMs ?? null,
+    reason: result.reason ?? null,
+    error: result.error ?? null,
+    checkedAt: new Date().toISOString()
+  };
+}
+
+export async function runChecks(services, adapters, execution = createExecutionContext()) {
   const results = [];
   for (const service of services) {
     if (!service.enabled) {
-      results.push({
-        id: service.id,
-        name: service.name,
-        provider: service.provider,
+      results.push(normalizeResult(service, {
         state: STATES.CONFIGURATION_ERROR,
         reason: "disabled"
-      });
+      }, execution));
       continue;
     }
 
     const adapter = adapters[service.provider];
     if (!adapter) {
-      results.push({
-        id: service.id,
-        name: service.name,
-        provider: service.provider,
+      results.push(normalizeResult(service, {
         state: STATES.UNKNOWN,
         reason: "adapter_not_implemented"
-      });
+      }, execution));
       continue;
     }
 
-    results.push({
-      id: service.id,
-      name: service.name,
-      provider: service.provider,
-      ...(await adapter(service))
-    });
+    try {
+      results.push(normalizeResult(service, await adapter(service), execution));
+    } catch (error) {
+      results.push(normalizeResult(service, {
+        state: STATES.UNKNOWN,
+        error: error?.name || "AdapterError",
+        reason: "adapter_exception"
+      }, execution));
+    }
   }
-  return results;
+
+  return {
+    execution,
+    results
+  };
 }
