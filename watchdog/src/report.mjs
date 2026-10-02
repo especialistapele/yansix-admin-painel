@@ -20,8 +20,8 @@ export function buildEvents(summary) {
   return summary.results.map((result) => ({
     executionId: summary.executionId,
     serviceId: result.serviceId,
-    type: result.state === STATES.HEALTHY ? "check" : "alert_candidate",
-    severity: result.state === STATES.HEALTHY ? "info" : "warning",
+    type: result.state === STATES.HEALTHY || result.state === STATES.CONFIGURATION_ERROR ? "check" : "alert_candidate",
+    severity: result.state === STATES.HEALTHY || result.state === STATES.CONFIGURATION_ERROR ? "info" : "warning",
     state: result.state,
     message: result.reason || result.error || `Estado detectado: ${result.state}`,
     occurredAt: result.checkedAt
