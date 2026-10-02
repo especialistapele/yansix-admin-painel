@@ -7,7 +7,9 @@
       "provider": "supabase",
       "enabled": false,
       "url_env": "WATCHDOG_SUPABASE_ESPECIALISTA_URL",
-      "key_env": "WATCHDOG_SUPABASE_ESPECIALISTA_KEY"
+      "key_env": "WATCHDOG_SUPABASE_ESPECIALISTA_KEY",
+      "project_ref": "clwaotfbqwvxpykruwed",
+      "management_token_env": "WATCHDOG_SUPABASE_ACCOUNT_1_TOKEN"
     },
     {
       "id": "supabase-painel",
@@ -15,7 +17,9 @@
       "provider": "supabase",
       "enabled": false,
       "url_env": "WATCHDOG_SUPABASE_PAINEL_URL",
-      "key_env": "WATCHDOG_SUPABASE_PAINEL_KEY"
+      "key_env": "WATCHDOG_SUPABASE_PAINEL_KEY",
+      "project_ref": "mwjkvtuvnzzyuddzjbnu",
+      "management_token_env": "WATCHDOG_SUPABASE_ACCOUNT_1_TOKEN"
     },
     {
       "id": "supabase-banco-cashback",
@@ -23,7 +27,9 @@
       "provider": "supabase",
       "enabled": false,
       "url_env": "WATCHDOG_SUPABASE_BANCO_CASHBACK_URL",
-      "key_env": "WATCHDOG_SUPABASE_BANCO_CASHBACK_KEY"
+      "key_env": "WATCHDOG_SUPABASE_BANCO_CASHBACK_KEY",
+      "project_ref": "uaqbnwwjqhhnqzsavbkh",
+      "management_token_env": "WATCHDOG_SUPABASE_ACCOUNT_2_TOKEN"
     },
     {
       "id": "supabase-enem",
@@ -31,7 +37,9 @@
       "provider": "supabase",
       "enabled": false,
       "url_env": "WATCHDOG_SUPABASE_ENEM_URL",
-      "key_env": "WATCHDOG_SUPABASE_ENEM_KEY"
+      "key_env": "WATCHDOG_SUPABASE_ENEM_KEY",
+      "project_ref": "evqbhkrjguramcphdjtk",
+      "management_token_env": "WATCHDOG_SUPABASE_ACCOUNT_2_TOKEN"
     },
     {
       "id": "supabase-buscador-cnpj",
@@ -39,7 +47,9 @@
       "provider": "supabase",
       "enabled": false,
       "url_env": "WATCHDOG_SUPABASE_BUSCADOR_CNPJ_URL",
-      "key_env": "WATCHDOG_SUPABASE_BUSCADOR_CNPJ_KEY"
+      "key_env": "WATCHDOG_SUPABASE_BUSCADOR_CNPJ_KEY",
+      "project_ref": "qoecysrghxghoybervyw",
+      "management_token_env": "WATCHDOG_SUPABASE_ACCOUNT_3_TOKEN"
     },
     {
       "id": "supabase-yansix-crm",
@@ -47,7 +57,9 @@
       "provider": "supabase",
       "enabled": false,
       "url_env": "WATCHDOG_SUPABASE_YANSIX_CRM_URL",
-      "key_env": "WATCHDOG_SUPABASE_YANSIX_CRM_KEY"
+      "key_env": "WATCHDOG_SUPABASE_YANSIX_CRM_KEY",
+      "project_ref": "zxeupenncextzrqgthqx",
+      "management_token_env": "WATCHDOG_SUPABASE_ACCOUNT_3_TOKEN"
     },
     {
       "id": "supabase-fazendinha",
@@ -55,7 +67,9 @@
       "provider": "supabase",
       "enabled": false,
       "url_env": "WATCHDOG_SUPABASE_FAZENDINHA_URL",
-      "key_env": "WATCHDOG_SUPABASE_FAZENDINHA_KEY"
+      "key_env": "WATCHDOG_SUPABASE_FAZENDINHA_KEY",
+      "project_ref": "iskdknoedbvbiqlosgii",
+      "management_token_env": "WATCHDOG_SUPABASE_ACCOUNT_4_TOKEN"
     },
     {
       "id": "supabase-kalatrace",
@@ -63,7 +77,9 @@
       "provider": "supabase",
       "enabled": false,
       "url_env": "WATCHDOG_SUPABASE_KALATRACE_URL",
-      "key_env": "WATCHDOG_SUPABASE_KALATRACE_KEY"
+      "key_env": "WATCHDOG_SUPABASE_KALATRACE_KEY",
+      "project_ref": "kedyzontvnailtwpacvz",
+      "management_token_env": "WATCHDOG_SUPABASE_ACCOUNT_5_TOKEN"
     },
     {
       "id": "neo4j-kalatrace",
