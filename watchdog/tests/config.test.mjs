@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { resolveServices, configurationSummary } from "../src/config.mjs";
 
-test("mantém serviços sem credenciais como pendentes sem expor valores", () => {
+test("mantém serviço explicitamente desabilitado como disabled sem credenciais", () => {
   const config = {
     services: [{
       id: "supabase-test",
@@ -18,11 +18,48 @@ test("mantém serviços sem credenciais como pendentes sem expor valores", () =>
 
   const services = resolveServices(config, {});
   assert.equal(services[0].enabled, false);
-  assert.equal(services[0].configurationState, "credentials_pending");
+  assert.equal(services[0].configurationState, "disabled");
   assert.equal(services[0].managementToken, undefined);
 });
 
-test("habilita Supabase quando o token de Management API e project_ref estão disponíveis", () => {
+test("não habilita serviço explicitamente desabilitado mesmo com token disponível", () => {
+  const config = {
+    services: [{
+      id: "supabase-test",
+      name: "Teste",
+      provider: "supabase",
+      enabled: false,
+      project_ref: "abc123",
+      management_token_env: "WATCHDOG_TEST_TOKEN"
+    }]
+  };
+
+  const services = resolveServices(config, {
+    WATCHDOG_TEST_TOKEN: "secret-value"
+  });
+
+  assert.equal(services[0].enabled, false);
+  assert.equal(services[0].configurationState, "disabled");
+});
+
+test("marca serviço explicitamente habilitado sem credenciais como credentials_pending", () => {
+  const config = {
+    services: [{
+      id: "supabase-test",
+      name: "Teste",
+      provider: "supabase",
+      enabled: true,
+      project_ref: "abc123",
+      management_token_env: "WATCHDOG_TEST_TOKEN"
+    }]
+  };
+
+  const services = resolveServices(config, {});
+  assert.equal(services[0].enabled, false);
+  assert.equal(services[0].configurationState, "credentials_pending");
+});
+
+test("habilita Supabase quando está explicitamente habilitado e o token de Management API e project_ref estão disponíveis", () => {
   const config = {
     services: [{
       id: "supabase-test",
