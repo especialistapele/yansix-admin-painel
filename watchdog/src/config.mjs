@@ -9,13 +9,17 @@ export function resolveServices(config, env = process.env) {
 
       const managementReady = Boolean(managementToken && service.project_ref);
       const httpReady = Boolean(url && key);
+      const explicitlyEnabled = service.enabled === true;
+      const enabled = explicitlyEnabled && (managementReady || httpReady);
 
       return {
         ...service,
-        enabled: Boolean(managementReady || httpReady),
-        configurationState: managementReady || httpReady
+        enabled,
+        configurationState: enabled
           ? "ready"
-          : "credentials_pending",
+          : explicitlyEnabled
+            ? "credentials_pending"
+            : "disabled",
         url,
         headers: key ? { apikey: key } : undefined,
         managementToken
@@ -28,12 +32,18 @@ export function resolveServices(config, env = process.env) {
       const password = service.password_env ? env[service.password_env] : undefined;
       const database = service.database_env ? env[service.database_env] : undefined;
 
-      const ready = Boolean(uri && username && password);
+      const ready =
+        service.enabled === true &&
+        Boolean(uri && username && password);
 
       return {
         ...service,
         enabled: ready,
-        configurationState: ready ? "ready" : "credentials_pending",
+        configurationState: ready
+          ? "ready"
+          : service.enabled === true
+            ? "credentials_pending"
+            : "disabled",
         uri,
         username,
         password,
@@ -43,8 +53,9 @@ export function resolveServices(config, env = process.env) {
 
     return {
       ...service,
-      enabled: service.enabled !== false,
-      configurationState: service.enabled === false ? "disabled" : "ready"
+      enabled: service.enabled === true,
+      configurationState:
+        service.enabled === true ? "ready" : "disabled"
     };
   });
 }
