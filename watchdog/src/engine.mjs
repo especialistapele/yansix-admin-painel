@@ -8,6 +8,9 @@ export const STATES = Object.freeze({
   AUTHENTICATION_ERROR: "authentication_error",
   TIMEOUT: "timeout",
   CONFIGURATION_ERROR: "configuration_error",
+  RECOVERY_REQUESTED: "recovery_requested",
+  RECOVERED: "recovered",
+  RECOVERY_FAILED: "recovery_failed",
   UNKNOWN: "unknown"
 });
 
