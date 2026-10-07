@@ -95,18 +95,46 @@ test("envia POST para /restore e Authorization Bearer sem expor token", async ()
       requestedOptions = options;
       return {
         status: 202,
-        ok: true
+        ok: true,
+        text: async () => ""
       };
     }
   });
 
-  const result = await adapter(baseService);
+  const result = await adapter({
+    ...baseService,
+    recovery: { ...baseService.recovery, verifyDelayMs: 0 }
+  });
 
-  assert.equal(result.state, RECOVERY_STATES.REQUESTED);
+  assert.equal(result.state, STATES.HEALTHY);
   assert.equal(requestedUrl, "https://api.supabase.com/v1/projects/uaqbnwwjqhhnqzsavbkh/restore");
   assert.equal(requestedOptions.method, "POST");
   assert.equal(requestedOptions.headers.Authorization, "Bearer secret-token");
   assert.equal(JSON.stringify(result).includes("secret-token"), false);
+});
+
+test("verifica o estado do projeto após o restore", async () => {
+  let calls = 0;
+  const adapter = createSupabaseRecoveryAdapter({
+    fetchImpl: async (url) => {
+      calls += 1;
+      if (url.endsWith("/restore")) return { status: 202, ok: true, text: async () => "" };
+      return {
+        status: 200,
+        ok: true,
+        text: async () => JSON.stringify({ status: "ACTIVE_HEALTHY" })
+      };
+    }
+  });
+
+  const result = await adapter({
+    ...baseService,
+    recovery: { ...baseService.recovery, verifyDelayMs: 0 }
+  });
+
+  assert.equal(result.state, STATES.HEALTHY);
+  assert.equal(result.verificationAttempt, 1);
+  assert.equal(calls, 2);
 });
 
 test("403 vira erro de autenticação/permissão", async () => {
