@@ -14,6 +14,7 @@ export function resolveServices(config, env = process.env) {
 
       return {
         ...service,
+        projectRef: service.project_ref,
         enabled,
         configurationState: enabled
           ? "ready"
