@@ -2,6 +2,9 @@ name: YANSIX Watchdog
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - feature/watchdog-v0
 
 permissions:
   contents: read
@@ -21,6 +24,7 @@ jobs:
 
       - name: Executar Watchdog
         env:
+          WATCHDOG_ENABLE_RECOVERY: "false"
           WATCHDOG_SUPABASE_ACCOUNT_1_TOKEN: ${{ secrets.WATCHDOG_SUPABASE_ACCOUNT_1_TOKEN }}
           WATCHDOG_SUPABASE_ACCOUNT_2_TOKEN: ${{ secrets.WATCHDOG_SUPABASE_ACCOUNT_2_TOKEN }}
           WATCHDOG_SUPABASE_ACCOUNT_3_TOKEN: ${{ secrets.WATCHDOG_SUPABASE_ACCOUNT_3_TOKEN }}
