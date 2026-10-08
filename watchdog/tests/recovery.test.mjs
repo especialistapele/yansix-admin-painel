@@ -123,10 +123,12 @@ test("envia POST para /restore e Authorization Bearer sem expor token", async ()
 
 test("verifica o estado do projeto após o restore", async () => {
   let calls = 0;
+  let verificationUrl = null;
   const adapter = createSupabaseRecoveryAdapter({
     fetchImpl: async (url) => {
       calls += 1;
       if (url.endsWith("/restore")) return { status: 202, ok: true, text: async () => "" };
+      verificationUrl = url;
       return {
         status: 200,
         ok: true,
@@ -143,6 +145,7 @@ test("verifica o estado do projeto após o restore", async () => {
   assert.equal(result.state, STATES.HEALTHY);
   assert.equal(result.verificationAttempt, 1);
   assert.equal(calls, 2);
+  assert.equal(verificationUrl, "https://api.supabase.com/v1/projects/uaqbnwwjqhhnqzsavbkh");
 });
 
 test("403 vira erro de autenticação/permissão", async () => {
