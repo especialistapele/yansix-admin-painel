@@ -56,16 +56,19 @@
       "id": "supabase-enem",
       "name": "Sistema ENEM",
       "provider": "supabase",
-      "enabled": false,
+      "enabled": true,
       "url_env": "WATCHDOG_SUPABASE_ENEM_URL",
       "key_env": "WATCHDOG_SUPABASE_ENEM_KEY",
       "project_ref": "evqbhkrjguramcphdjtk",
       "management_token_env": "WATCHDOG_SUPABASE_ACCOUNT_2_TOKEN",
       "recovery": {
-        "enabled": false,
+        "enabled": true,
         "maxAttempts": 1,
         "timeoutMs": 15000,
-        "verifyDelayMs": 10000
+        "verifyDelayMs": 10000,
+        "allowProjectRefs": [
+          "evqbhkrjguramcphdjtk"
+        ]
       }
     },
     {
