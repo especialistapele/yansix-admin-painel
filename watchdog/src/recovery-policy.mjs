@@ -7,7 +7,7 @@ export function canRecover(service, result) {
     return { allowed: false, reason: "service_disabled" };
   }
 
-  if (service.provider !== "supabase") {
+  if (!["supabase", "neo4j_aura"].includes(service.provider)) {
     return { allowed: false, reason: "provider_not_supported" };
   }
 
@@ -15,18 +15,25 @@ export function canRecover(service, result) {
     return { allowed: false, reason: "state_not_recoverable" };
   }
 
-  if (!service.projectRef || !service.managementToken) {
+  if (service.provider === "supabase" && (!service.projectRef || !service.managementToken)) {
     return { allowed: false, reason: "management_credentials_missing" };
   }
 
-  const allowedRefs = service.recovery.allowProjectRefs;
-  if (Array.isArray(allowedRefs) && !allowedRefs.includes(service.projectRef)) {
-    return { allowed: false, reason: "project_not_allowlisted" };
+  if (service.provider === "neo4j_aura" && (!service.uri || !service.clientId || !service.clientSecret)) {
+    return { allowed: false, reason: "management_credentials_missing" };
+  }
+
+  const allowlist = service.recovery.allowProjectRefs;
+  const targetId = service.provider === "supabase" ? service.projectRef : service.instanceId;
+  if (Array.isArray(allowlist) && allowlist.length > 0 && !allowlist.includes(targetId)) {
+    return { allowed: false, reason: "target_not_allowlisted" };
   }
 
   return {
     allowed: true,
-    reason: "paused_project_restore_authorized"
+    reason: service.provider === "neo4j_aura"
+      ? "paused_instance_resume_authorized"
+      : "paused_project_restore_authorized"
   };
 }
 
