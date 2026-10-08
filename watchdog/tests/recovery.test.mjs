@@ -93,10 +93,19 @@ test("envia POST para /restore e Authorization Bearer sem expor token", async ()
     fetchImpl: async (url, options) => {
       requestedUrl = url;
       requestedOptions = options;
+
+      if (url.endsWith("/restore")) {
+        return {
+          status: 202,
+          ok: true,
+          text: async () => ""
+        };
+      }
+
       return {
-        status: 202,
+        status: 200,
         ok: true,
-        text: async () => ""
+        text: async () => JSON.stringify({ status: "ACTIVE_HEALTHY" })
       };
     }
   });
@@ -115,21 +124,10 @@ test("envia POST para /restore e Authorization Bearer sem expor token", async ()
 
 test("verifica o estado do projeto após o restore", async () => {
   let calls = 0;
-  let requestedUrl = null;
-  let requestedOptions = null;
   const adapter = createSupabaseRecoveryAdapter({
-    fetchImpl: async (url, options) => {
-      requestedUrl = url;
-      requestedOptions = options;
-
-      if (url.endsWith("/restore")) {
-        return {
-          status: 202,
-          ok: true,
-          text: async () => ""
-        };
-      }
-
+    fetchImpl: async (url) => {
+      calls += 1;
+      if (url.endsWith("/restore")) return { status: 202, ok: true, text: async () => "" };
       return {
         status: 200,
         ok: true,
