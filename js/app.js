@@ -1225,6 +1225,23 @@ document.addEventListener("click",async e=>{
       document.getElementById("financeiro-situacao-modal").close();toast("Pagamento registrado e saldo atualizado.","success");await loadAll();
     }catch(err){toast(err.message,"error");}
   }
+  const delCobranca=e.target.closest("[data-fin-delete]");
+  if(delCobranca){
+    const f=STATE.financeiro.find(x=>x.id===delCobranca.dataset.finDelete);
+    if(!f)return;
+    const cliente=f.contrato?.cliente_produto?.cliente?.nome||"este cliente";
+    if(!confirm(`Excluir a cobrança de ${cliente} no valor de ${moeda(f.valor_previsto||0)}? Os pagamentos vinculados a esta cobrança também serão removidos. Esta ação não pode ser desfeita.`))return;
+    delCobranca.disabled=true;
+    try{
+      await API.removeFinanceiro(delCobranca.dataset.finDelete);
+      toast("Cobrança excluída.", "success");
+      await loadAll();
+    }catch(err){
+      toast(err.message||"Não foi possível excluir a cobrança.", "error");
+      delCobranca.disabled=false;
+    }
+    return;
+  }
   const c=e.target.closest("[data-fin-cliente]"); if(c&&c.dataset.finCliente) abrirCliente360(c.dataset.finCliente);
 });
 document.getElementById("financeiro-situacao-fechar")?.addEventListener("click",()=>document.getElementById("financeiro-situacao-modal").close());
