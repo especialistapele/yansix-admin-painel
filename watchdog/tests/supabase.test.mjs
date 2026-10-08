@@ -35,7 +35,7 @@ test("Management API classifica ACTIVE_HEALTHY como healthy", async () => {
   });
 
   assert.equal(result.state, STATES.HEALTHY);
-  assert.match(requestedUrl, /api\.supabase\.com\/v1\/projects\/project-ref\/health$/);
+  assert.match(requestedUrl, /api\.supabase\.com\/v1\/projects\/project-ref$/);
 });
 
 test("Management API classifica INACTIVE como paused", async () => {
