@@ -10,19 +10,13 @@ export const RECOVERY_STATES = Object.freeze({
   UNKNOWN: STATES.UNKNOWN
 });
 
-/*
- * Supabase documents project restoration as a Management API capability
- * requiring Project Settings read-write permission. The endpoint used here
- * is POST /v1/projects/{ref}/restore. A separate verification call is
- * performed after the restore request before the watchdog reports success.
- */
 export function createSupabaseRecoveryAdapter({
   fetchImpl = fetch,
   restoreEndpoint = "https://api.supabase.com/v1/projects/{ref}/restore",
   sleepImpl = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 } = {}) {
   return async function requestRestore(service) {
-    const verifyEndpoint = `https://api.supabase.com/v1/projects/${encodeURIComponent(service.projectRef)}`;
+    const verifyEndpoint = "https://api.supabase.com/v1/projects";
     const token = service.managementToken;
     const projectRef = service.projectRef;
 
@@ -101,18 +95,22 @@ export function createSupabaseRecoveryAdapter({
           body = null;
         }
 
+        const projects = Array.isArray(body) ? body : Array.isArray(body?.projects) ? body.projects : [];
+        const project = projects.find((item) => item?.ref === projectRef);
+        const providerState = project?.status ?? null;
+
         verification = {
           attempt,
           status: verifyResponse.status,
-          providerState: body?.status ?? body?.state ?? null
+          providerState
         };
 
-        if (verifyResponse.ok && verification.providerState === "ACTIVE_HEALTHY") {
+        if (verifyResponse.ok && providerState === "ACTIVE_HEALTHY") {
           return {
             state: STATES.HEALTHY,
             status: response.status,
             reason: "project_restored_and_healthy",
-            providerState: verification.providerState,
+            providerState,
             verificationAttempt: attempt,
             latencyMs: Math.round(performance.now() - started)
           };
