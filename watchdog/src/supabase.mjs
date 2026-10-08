@@ -18,7 +18,7 @@ export function createSupabaseAdapter({ fetchImpl = fetch } = {}) {
       const started = performance.now();
       try {
         const response = await fetchImpl(
-          `https://api.supabase.com/v1/projects/${encodeURIComponent(projectRef)}`,
+          "https://api.supabase.com/v1/projects",
           {
             method: "GET",
             headers: {
@@ -60,13 +60,23 @@ export function createSupabaseAdapter({ fetchImpl = fetch } = {}) {
             state: response.status >= 500 ? STATES.UNAVAILABLE : STATES.UNKNOWN,
             status: response.status,
             reason: "management_api_error",
-            providerState: body?.status ?? null,
             apiMessage: typeof body?.message === "string" ? body.message.slice(0, 200) : null,
             latencyMs: Math.round(performance.now() - started)
           };
         }
 
-        const providerState = body?.status || body?.state || null;
+        const projects = Array.isArray(body) ? body : Array.isArray(body?.projects) ? body.projects : [];
+        const project = projects.find((item) => item?.ref === projectRef);
+        const providerState = project?.status ?? null;
+
+        if (!project) {
+          return {
+            state: STATES.UNKNOWN,
+            status: response.status,
+            reason: "management_api_project_not_found",
+            latencyMs: Math.round(performance.now() - started)
+          };
+        }
 
         if (providerState === "INACTIVE" || providerState === "PAUSED") {
           return {
