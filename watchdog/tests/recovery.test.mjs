@@ -91,10 +91,9 @@ test("envia POST para /restore e Authorization Bearer sem expor token", async ()
   let requestedOptions = null;
   const adapter = createSupabaseRecoveryAdapter({
     fetchImpl: async (url, options) => {
-      requestedUrl = url;
-      requestedOptions = options;
-
       if (url.endsWith("/restore")) {
+        requestedUrl = url;
+        requestedOptions = options;
         return {
           status: 202,
           ok: true,
