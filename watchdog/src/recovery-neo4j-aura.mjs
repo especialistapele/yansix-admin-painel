@@ -23,7 +23,7 @@ export function createNeo4jAuraRecoveryAdapter({ fetchImpl = fetch, sleepImpl = 
     const started = performance.now();
     try {
       const accessToken = await token(service, fetchImpl);
-      const baseHeaders = { Authorization: `Bearer ${accessToken}`, Accept: "application/json" };
+      const baseHeaders = { Authorization: `Bearer ${accessToken}`, Accept: "application/json", "Content-Type": "application/json" };
       const resumeResponse = await fetchImpl(`${API_BASE}/v1/instances/${encodeURIComponent(service.instanceId)}/resume`, { method: "POST", headers: baseHeaders, signal: AbortSignal.timeout(service.recovery?.timeoutMs || 15000) });
       if (resumeResponse.status === 401 || resumeResponse.status === 403) return { state: NEO4J_RECOVERY_STATES.AUTHENTICATION_ERROR, status: resumeResponse.status, reason: "aura_resume_authentication_or_permission" };
       if (resumeResponse.status === 429) return { state: NEO4J_RECOVERY_STATES.RATE_LIMITED, status: resumeResponse.status, reason: "aura_resume_rate_limited" };
