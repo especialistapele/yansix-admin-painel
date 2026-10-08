@@ -4,7 +4,10 @@ on:
   workflow_dispatch:
   push:
     branches:
+      - main
       - feature/watchdog-v0
+  schedule:
+    - cron: "0 6 */3 * *"
 
 permissions:
   contents: read
