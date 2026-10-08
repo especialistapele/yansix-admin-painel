@@ -6,6 +6,7 @@ on:
     branches:
       - main
       - feature/watchdog-v0
+      - test/watchdog-supabase-recovery-mocked
   schedule:
     - cron: "0 6 */3 * *"
 
@@ -37,7 +38,7 @@ jobs:
 
       - name: Testes do Watchdog
         run: |
-          node --test watchdog/tests/engine.test.mjs watchdog/tests/supabase.test.mjs watchdog/tests/config.test.mjs watchdog/tests/recovery.test.mjs watchdog/tests/neo4j-aura.test.mjs watchdog/tests/recovery-neo4j-aura.test.mjs
+          node --test watchdog/tests/engine.test.mjs watchdog/tests/supabase.test.mjs watchdog/tests/config.test.mjs watchdog/tests/recovery.test.mjs watchdog/tests/recovery-supabase.test.mjs watchdog/tests/neo4j-aura.test.mjs watchdog/tests/recovery-neo4j-aura.test.mjs
 
       - name: Executar Watchdog
         env:
