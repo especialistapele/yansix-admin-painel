@@ -8,7 +8,7 @@ const baseService={id:"supabase-banco-cashback",name:"Banco Cashback",provider:"
 
 test("não recupera se recovery estiver desabilitado",()=>assert.deepEqual(canRecover({...baseService,recovery:{...baseService.recovery,enabled:false}},{state:STATES.PAUSED}),{allowed:false,reason:"recovery_disabled"}));
 test("não recupera serviço saudável",()=>assert.deepEqual(canRecover(baseService,{state:STATES.HEALTHY}),{allowed:false,reason:"state_not_recoverable"}));
-test("não recupera serviço que não seja Supabase",()=>assert.deepEqual(canRecover({...baseService,provider:"neo4j_aura"},{state:STATES.PAUSED}),{allowed:false,reason:"provider_not_supported"}));
+test("não recupera serviço com provider não suportado",()=>assert.deepEqual(canRecover({...baseService,provider:"outro"},{state:STATES.PAUSED}),{allowed:false,reason:"provider_not_supported"}));
 test("não recupera sem token",()=>assert.deepEqual(canRecover({...baseService,managementToken:undefined},{state:STATES.PAUSED}),{allowed:false,reason:"management_credentials_missing"}));
 test("não recupera sem project ref",()=>assert.deepEqual(canRecover({...baseService,projectRef:undefined},{state:STATES.PAUSED}),{allowed:false,reason:"management_credentials_missing"}));
 test("não recupera projeto fora da allowlist",()=>assert.deepEqual(canRecover({...baseService,projectRef:"evqbhkrjguramcphdjtk"},{state:STATES.PAUSED}),{allowed:false,reason:"project_not_allowlisted"}));
