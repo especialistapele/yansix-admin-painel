@@ -1,0 +1,63 @@
+name: YANSIX Watchdog
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/watchdog-v0
+
+permissions:
+  contents: read
+
+jobs:
+  watchdog:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validar credenciais Neo4j Aura
+        env:
+          WATCHDOG_NEO4J_URI: ${{ secrets.WATCHDOG_NEO4J_URI }}
+          WATCHDOG_NEO4J_CLIENT_ID: ${{ secrets.WATCHDOG_NEO4J_CLIENT_ID }}
+          WATCHDOG_NEO4J_CLIENT_SECRET: ${{ secrets.WATCHDOG_NEO4J_CLIENT_SECRET }}
+        run: |
+          for name in WATCHDOG_NEO4J_URI WATCHDOG_NEO4J_CLIENT_ID WATCHDOG_NEO4J_CLIENT_SECRET; do
+            if [ -n "${!name}" ]; then
+              echo "$name=present"
+            else
+              echo "$name=missing"
+            fi
+          done
+
+      - name: Testes do Watchdog
+        run: |
+          node --test watchdog/tests/engine.test.mjs watchdog/tests/supabase.test.mjs watchdog/tests/config.test.mjs watchdog/tests/recovery.test.mjs watchdog/tests/neo4j-aura.test.mjs watchdog/tests/recovery-neo4j-aura.test.mjs
+
+      - name: Executar Watchdog
+        env:
+          WATCHDOG_ENABLE_RECOVERY: "true"
+          WATCHDOG_SUPABASE_ACCOUNT_1_TOKEN: ${{ secrets.WATCHDOG_SUPABASE_ACCOUNT_1_TOKEN }}
+          WATCHDOG_SUPABASE_ACCOUNT_2_TOKEN: ${{ secrets.WATCHDOG_SUPABASE_ACCOUNT_2_TOKEN }}
+          WATCHDOG_SUPABASE_ACCOUNT_3_TOKEN: ${{ secrets.WATCHDOG_SUPABASE_ACCOUNT_3_TOKEN }}
+          WATCHDOG_SUPABASE_ACCOUNT_4_TOKEN: ${{ secrets.WATCHDOG_SUPABASE_ACCOUNT_4_TOKEN }}
+          WATCHDOG_SUPABASE_ACCOUNT_5_TOKEN: ${{ secrets.WATCHDOG_SUPABASE_ACCOUNT_5_TOKEN }}
+          WATCHDOG_NEO4J_URI: ${{ secrets.WATCHDOG_NEO4J_URI }}
+          WATCHDOG_NEO4J_USERNAME: ${{ secrets.WATCHDOG_NEO4J_USERNAME }}
+          WATCHDOG_NEO4J_PASSWORD: ${{ secrets.WATCHDOG_NEO4J_PASSWORD }}
+          WATCHDOG_NEO4J_DATABASE: ${{ secrets.WATCHDOG_NEO4J_DATABASE }}
+          WATCHDOG_NEO4J_CLIENT_ID: ${{ secrets.WATCHDOG_NEO4J_CLIENT_ID }}
+          WATCHDOG_NEO4J_CLIENT_SECRET: ${{ secrets.WATCHDOG_NEO4J_CLIENT_SECRET }}
+        run: node watchdog/src/main.mjs
+
+      - name: Publicar relatório
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: watchdog-report
+          path: |
+            watchdog/report.md
+            watchdog/report.json
+          if-no-files-found: warn
