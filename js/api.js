@@ -420,9 +420,9 @@ const API = {
     return Array.isArray(data) ? data[0] : data;
   },
   async removeFinanceiro(id) {
-    const { error } = await SUPABASE_CLIENT.from(tableName("FINANCEIRO")).delete().eq("id", id);
+    const { data, error } = await SUPABASE_CLIENT.rpc("excluir_cobranca_financeira", { p_financeiro_id: id });
     if (error) throw new Error(error.message);
-    return true;
+    return data === true;
   },
   async gerarProximoLancamento(contratoId) {
     const { data, error } = await SUPABASE_CLIENT.rpc("gerar_proximo_lancamento_financeiro", { p_contrato_id: contratoId });
