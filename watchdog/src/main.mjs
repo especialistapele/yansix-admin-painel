@@ -5,18 +5,22 @@ import { resolveServices, configurationSummary } from "./config.mjs";
 import { buildEvents, summarize, toMarkdown } from "./report.mjs";
 import { canRecover } from "./recovery-policy.mjs";
 import { createSupabaseRecoveryAdapter } from "./recovery-supabase.mjs";
+import { createNeo4jAuraAdapter } from "./neo4j-aura.mjs";
+import { createNeo4jAuraRecoveryAdapter } from "./recovery-neo4j-aura.mjs";
 
 const configPath = new URL("../config/services.example.json", import.meta.url);
 const config = JSON.parse(await fs.readFile(configPath, "utf8"));
 const services = resolveServices(config);
 
 const adapters = {
-  supabase: createSupabaseAdapter()
+  supabase: createSupabaseAdapter(),
+  neo4j_aura: createNeo4jAuraAdapter()
 };
 
 const recoveryEnabled = process.env.WATCHDOG_ENABLE_RECOVERY === "true";
 const recoveryAdapters = {
-  supabase: createSupabaseRecoveryAdapter()
+  supabase: createSupabaseRecoveryAdapter(),
+  neo4j_aura: createNeo4jAuraRecoveryAdapter()
 };
 
 const run = await runChecks(services, adapters);
