@@ -88,14 +88,18 @@ test("gera resumo sem valores de credenciais", () => {
       enabled: true,
       uri_env: "URI",
       username_env: "USER",
-      password_env: "PASS"
+      password_env: "PASS",
+      client_id_env: "CID",
+      client_secret_env: "CSECRET"
     }]
   };
 
   const services = resolveServices(config, {
     URI: "neo4j+s://example",
     USER: "neo4j",
-    PASS: "secret"
+    PASS: "secret",
+    CID: "client-id",
+    CSECRET: "client-secret"
   });
 
   const summary = configurationSummary(services);
