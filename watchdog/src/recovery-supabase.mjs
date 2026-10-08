@@ -22,7 +22,7 @@ export function createSupabaseRecoveryAdapter({
   sleepImpl = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 } = {}) {
   return async function requestRestore(service) {
-    const verifyEndpoint = `https://api.supabase.com/v1/projects/${encodeURIComponent(service.projectRef)}/health`;
+    const verifyEndpoint = `https://api.supabase.com/v1/projects/${encodeURIComponent(service.projectRef)}`;
     const token = service.managementToken;
     const projectRef = service.projectRef;
 
