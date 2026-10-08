@@ -1,3 +1,5 @@
+import { URL } from "node:url";
+
 export function resolveServices(config, env = process.env) {
   return config.services.map((service) => {
     if (service.provider === "supabase") {
@@ -6,7 +8,6 @@ export function resolveServices(config, env = process.env) {
       const managementToken = service.management_token_env
         ? env[service.management_token_env]
         : undefined;
-
       const managementReady = Boolean(managementToken && service.project_ref);
       const httpReady = Boolean(url && key);
       const explicitlyEnabled = service.enabled === true;
@@ -16,11 +17,7 @@ export function resolveServices(config, env = process.env) {
         ...service,
         projectRef: service.project_ref,
         enabled,
-        configurationState: enabled
-          ? "ready"
-          : explicitlyEnabled
-            ? "credentials_pending"
-            : "disabled",
+        configurationState: enabled ? "ready" : explicitlyEnabled ? "credentials_pending" : "disabled",
         url,
         headers: key ? { apikey: key } : undefined,
         managementToken
@@ -32,31 +29,35 @@ export function resolveServices(config, env = process.env) {
       const username = service.username_env ? env[service.username_env] : undefined;
       const password = service.password_env ? env[service.password_env] : undefined;
       const database = service.database_env ? env[service.database_env] : undefined;
-
-      const ready =
-        service.enabled === true &&
-        Boolean(uri && username && password);
+      const clientId = service.client_id_env ? env[service.client_id_env] : undefined;
+      const clientSecret = service.client_secret_env ? env[service.client_secret_env] : undefined;
+      const explicitlyEnabled = service.enabled === true;
+      const enabled = explicitlyEnabled && Boolean(uri && clientId && clientSecret);
+      let instanceId = service.instance_id;
+      if (!instanceId && uri) {
+        try {
+          instanceId = new URL(uri).hostname.split(".")[0];
+        } catch {}
+      }
 
       return {
         ...service,
-        enabled: ready,
-        configurationState: ready
-          ? "ready"
-          : service.enabled === true
-            ? "credentials_pending"
-            : "disabled",
+        enabled,
+        configurationState: enabled ? "ready" : explicitlyEnabled ? "credentials_pending" : "disabled",
         uri,
         username,
         password,
-        database
+        database,
+        clientId,
+        clientSecret,
+        instanceId
       };
     }
 
     return {
       ...service,
       enabled: service.enabled === true,
-      configurationState:
-        service.enabled === true ? "ready" : "disabled"
+      configurationState: service.enabled === true ? "ready" : "disabled"
     };
   });
 }
