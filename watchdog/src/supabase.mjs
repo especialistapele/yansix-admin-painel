@@ -18,7 +18,7 @@ export function createSupabaseAdapter({ fetchImpl = fetch } = {}) {
       const started = performance.now();
       try {
         const response = await fetchImpl(
-          `https://api.supabase.com/v1/projects/${encodeURIComponent(projectRef)}/health`,
+          `https://api.supabase.com/v1/projects/${encodeURIComponent(projectRef)}`,
           {
             method: "GET",
             headers: {
@@ -61,6 +61,7 @@ export function createSupabaseAdapter({ fetchImpl = fetch } = {}) {
             status: response.status,
             reason: "management_api_error",
             providerState: body?.status ?? null,
+            apiMessage: typeof body?.message === "string" ? body.message.slice(0, 200) : null,
             latencyMs: Math.round(performance.now() - started)
           };
         }
