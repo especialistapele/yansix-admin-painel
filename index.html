@@ -251,9 +251,13 @@
       </div>
       <div class="panel-card">
         <div class="watchdog-toolbar">
-          <div><h3>Execuções recentes</h3><p class="watchdog-intro">O agendador do GitHub Actions inicia as verificações independentemente do banco central. Os relatórios ficam disponíveis aqui depois de persistidos no Supabase do painel.</p></div>
-          <button type="button" class="btn primary" id="watchdog-refresh">Atualizar histórico</button>
+          <div><h3>Execuções recentes</h3><p class="watchdog-intro">Consulte o histórico ou solicite uma nova rodada de verificações. O acionamento manual inicia o workflow no GitHub Actions; não executa recuperação dos serviços.</p></div>
+          <div class="watchdog-actions">
+            <button type="button" class="btn primary" id="watchdog-run-now">▶ Verificar agora</button>
+            <button type="button" class="btn" id="watchdog-refresh">Atualizar histórico</button>
+          </div>
         </div>
+        <div id="watchdog-dispatch-status" class="watchdog-dispatch-status" role="status" aria-live="polite" hidden></div>
         <div id="watchdog-runs-list"><div class="empty">Abra esta área para consultar o histórico do Watchdog.</div></div>
       </div>
       <div class="panel-card">
