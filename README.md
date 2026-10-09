@@ -142,3 +142,16 @@ A tabela `watchdog_runs` já tem RLS habilitado e permite leitura a usuários au
 - Registros de histórico na tabela: limpeza automática de linhas com mais de 60 dias a cada persistência.
 - A recuperação automática permanece desabilitada até auditoria separada dos endpoints e das salvaguardas.
 - O cron `0 6 */5 * *` usa dias do mês (1, 6, 11, 16, 21, 26 e 31); aproxima cinco dias, mas não representa um intervalo móvel exato de 120 horas.
+
+
+### Acionamento manual do Watchdog
+
+A tela Watchdog possui o botão **Verificar agora**, que solicita uma nova execução do workflow no branch `main`. Essa ação executa apenas verificações; não desperta, reinicia, reconfigura nem recupera serviços. O botão exige confirmação explícita e a Edge Function restringe a chamada ao operador autorizado.
+
+Para habilitar o acionamento:
+1. Crie um fine-grained Personal Access Token do GitHub restrito somente ao repositório `especialistapele/yansix-admin-painel`, com permissão **Actions: Read and write**. Não use token amplo se puder evitar.
+2. No Supabase do painel (`mwjkvtuvnzzyuddzjbnu`), abra **Project Settings → Edge Functions → Secrets** e cadastre `WATCHDOG_GITHUB_TOKEN` com esse token. Não coloque o token no frontend, no repositório ou em `js/config.js`.
+3. A função `watchdog-dispatch` deve estar implantada com verificação JWT habilitada. Ela exige sessão autenticada, confere o e-mail do operador autorizado e aceita apenas a ação fixa `run-checks`.
+4. Depois de solicitar uma execução, aguarde o workflow terminar e atualizar o histórico. A confirmação do botão significa apenas que o GitHub aceitou a solicitação, não que a execução terminou com sucesso.
+
+Se o token não estiver configurado, o botão falha de forma segura e informa a configuração pendente. A recuperação automática continua desativada.
