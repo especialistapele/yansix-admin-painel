@@ -16,3 +16,10 @@
 .watchdog-state{display:inline-flex;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:600;white-space:nowrap}.watchdog-state.ok{background:var(--green-bg);color:var(--green)}.watchdog-state.bad{background:var(--red-bg);color:var(--red)}.watchdog-state.warn{background:var(--amber-bg);color:var(--amber)}.watchdog-state.neutral{background:var(--panel-alt);color:var(--muted)}
 .watchdog-footnote{margin-top:14px}.watchdog-error small{display:block;margin-top:8px;overflow-wrap:anywhere}
 @media(max-width:760px){.watchdog-run-row{grid-template-columns:12px minmax(0,1fr) auto}.watchdog-run-summary{grid-column:2/-1}.watchdog-run-meta{grid-template-columns:1fr}.watchdog-table{min-width:680px}}
+
+.watchdog-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.watchdog-dispatch-status{margin:0 0 14px;padding:12px 14px;border:1px solid var(--line);border-radius:9px;background:var(--panel-alt);font-size:13px;color:var(--text);overflow-wrap:anywhere}
+.watchdog-dispatch-status.success{border-color:rgba(30,158,111,.3);background:var(--green-bg);color:var(--green)}
+.watchdog-dispatch-status.error{border-color:rgba(194,59,40,.3);background:var(--red-bg);color:var(--red)}
+.watchdog-actions .btn:disabled{opacity:.6;cursor:wait}
+@media(max-width:760px){.watchdog-actions{width:100%}.watchdog-actions .btn{flex:1}}

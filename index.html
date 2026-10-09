@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
-<link rel="stylesheet" href="css/watchdog.css?v=1">
+<link rel="stylesheet" href="css/watchdog.css?v=2">
 </head>
 <body>
 
@@ -251,9 +251,13 @@
       </div>
       <div class="panel-card">
         <div class="watchdog-toolbar">
-          <div><h3>Execuções recentes</h3><p class="watchdog-intro">O agendador do GitHub Actions inicia as verificações independentemente do banco central. Os relatórios ficam disponíveis aqui depois de persistidos no Supabase do painel.</p></div>
-          <button type="button" class="btn primary" id="watchdog-refresh">Atualizar histórico</button>
+          <div><h3>Execuções recentes</h3><p class="watchdog-intro">Consulte o histórico ou solicite uma nova rodada de verificações. O acionamento manual inicia o workflow no GitHub Actions; não executa recuperação dos serviços.</p></div>
+          <div class="watchdog-actions">
+            <button type="button" class="btn primary" id="watchdog-run-now">▶ Verificar agora</button>
+            <button type="button" class="btn" id="watchdog-refresh">Atualizar histórico</button>
+          </div>
         </div>
+        <div id="watchdog-dispatch-status" class="watchdog-dispatch-status" role="status" aria-live="polite" hidden></div>
         <div id="watchdog-runs-list"><div class="empty">Abra esta área para consultar o histórico do Watchdog.</div></div>
       </div>
       <div class="panel-card">
@@ -595,7 +599,7 @@
 <script src="js/config.js"></script>
 <script src="js/api.js?v=14.0"></script>
 <script src="js/app.js?v=14.0"></script>
-<script src="js/watchdog.js?v=1"></script>
+<script src="js/watchdog.js?v=2"></script>
 
 </body>
 </html>

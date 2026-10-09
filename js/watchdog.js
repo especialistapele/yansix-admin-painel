@@ -4,7 +4,10 @@
   const panel = document.getElementById("watchdog-runs-list");
   const details = document.getElementById("watchdog-latest-details");
   const refresh = document.getElementById("watchdog-refresh");
+  const runNow = document.getElementById("watchdog-run-now");
+  const dispatchStatus = document.getElementById("watchdog-dispatch-status");
   let loading = false;
+  let dispatching = false;
 
   const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
@@ -40,7 +43,7 @@
       <div class="watchdog-run-meta"><div><span>Iniciada</span><strong>${esc(date(run.started_at))}</strong></div><div><span>Relatório gerado</span><strong>${esc(date(run.generated_at))}</strong></div><div><span>Serviços verificados</span><strong>${Number(run.total) || 0}</strong></div></div>
       <div class="watchdog-counts">${countCards || '<span class="meta">Sem contagens disponíveis.</span>'}</div>
       <div class="table-responsive"><table class="watchdog-table"><thead><tr><th>Serviço</th><th>Estado</th><th>HTTP</th><th>Latência</th><th>Detalhe</th></tr></thead><tbody>${rows || '<tr><td colspan="5">Esta execução não possui detalhes de serviços.</td></tr>'}</tbody></table></div>
-      <p class="meta watchdog-footnote">A recuperação automática permanece desativada. Esta tela apresenta observações, não executa ações sobre os serviços monitorados.</p>`;
+      <p class="meta watchdog-footnote">A recuperação automática permanece desativada. O acionamento manual inicia apenas as verificações; não desperta, reinicia nem altera os serviços monitorados.</p>`;
   }
 
   async function load() {
@@ -92,6 +95,55 @@
       refresh.textContent = "Atualizar histórico";
     }
   }
+  function showDispatchStatus(message, kind = "") {
+    if (!dispatchStatus) return;
+    dispatchStatus.textContent = message;
+    dispatchStatus.className = `watchdog-dispatch-status ${kind}`.trim();
+    dispatchStatus.hidden = false;
+  }
+
+  if (runNow) {
+    runNow.addEventListener("click", async () => {
+      if (dispatching) return;
+      const accepted = window.confirm(
+        "Iniciar agora uma nova rodada de verificações do Watchdog?\n\nIsso executa somente os testes de saúde. Nenhum serviço será despertado, reiniciado ou alterado."
+      );
+      if (!accepted) return;
+
+      dispatching = true;
+      runNow.disabled = true;
+      runNow.textContent = "Solicitando…";
+      showDispatchStatus("Enviando solicitação segura ao GitHub Actions…");
+      try {
+        const { data, error } = await SUPABASE_CLIENT.functions.invoke("watchdog-dispatch", {
+          body: { action: "run-checks" }
+        });
+        if (error) {
+          const details = error.context?.body?.error || error.message || "Falha na chamada segura.";
+          throw new Error(details);
+        }
+        if (!data?.accepted) throw new Error(data?.error || "O GitHub não confirmou o acionamento.");
+        showDispatchStatus(
+          "Solicitação aceita. O GitHub Actions iniciará uma nova execução; ela aparecerá no histórico após concluir e salvar o relatório. A solicitação não confirma que os testes já terminaram.",
+          "success"
+        );
+      } catch (error) {
+        console.error("Falha ao acionar Watchdog:", error);
+        const message = String(error?.message || "");
+        const friendly = /WATCHDOG_GITHUB_TOKEN|not configured|secret/i.test(message)
+          ? "O acionamento manual ainda não está configurado: falta cadastrar o segredo WATCHDOG_GITHUB_TOKEN nas Edge Function Secrets do Supabase do painel."
+          : /403|not authorized|forbidden/i.test(message)
+            ? "A solicitação foi recusada por permissão. Confira se a credencial do GitHub tem permissão Actions: write apenas neste repositório."
+            : `Não foi possível iniciar a verificação: ${message || "erro de conexão"}`;
+        showDispatchStatus(friendly, "error");
+      } finally {
+        dispatching = false;
+        runNow.disabled = false;
+        runNow.textContent = "▶ Verificar agora";
+      }
+    });
+  }
+
   refresh.addEventListener("click", load);
   document.querySelector('.nav-link[data-view="watchdog"]')?.addEventListener("click", load);
   window.addEventListener("watchdog:refresh", load);
