@@ -21,9 +21,11 @@ export async function persistReport({
     events: report.events || [],
     results: summary.results || []
   };
+  // Supabase's newer sb_secret_* keys are opaque API keys, not JWTs.
+  // Send them only in apikey; legacy service_role JWTs also support Bearer.
   const headers = {
     apikey: serviceRoleKey,
-    Authorization: `Bearer ${serviceRoleKey}`,
+    ...(serviceRoleKey.startsWith("sb_secret_") ? {} : { Authorization: `Bearer ${serviceRoleKey}` }),
     "Content-Type": "application/json",
     Prefer: "resolution=merge-duplicates,return=minimal"
   };
