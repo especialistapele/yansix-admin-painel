@@ -1,5 +1,5 @@
 (() => {
-  const root = document.getElementById("watchdog-dashboard");
+  const root = document.getElementById("view-watchdog");
   if (!root) return;
   const panel = document.getElementById("watchdog-runs-list");
   const details = document.getElementById("watchdog-latest-details");
@@ -64,13 +64,18 @@
       const states = latest.counts || {};
       const unhealthy = Number(states.unavailable || 0) + Number(states.timeout || 0)
         + Number(states.authentication_error || 0) + Number(states.recovery_failed || 0);
-      panel.innerHTML = runs.map((run, index) => `
-        <button class="watchdog-run-row ${index === 0 ? "selected" : ""}" type="button" data-run-index="${index}">
-          <span class="watchdog-run-indicator ${index === 0 ? (unhealthy ? "bad" : "ok") : "neutral"}"></span>
-          <span class="watchdog-run-title"><strong>${esc(date(run.generated_at))}</strong><small>ID: ${esc(run.execution_id)}</small></span>
-          <span class="watchdog-run-total">${Number(run.total) || 0} serviços</span>
-          <span class="watchdog-run-summary">${unhealthy ? `${unhealthy} com falha/timeout` : "Sem falhas reportadas"}</span>
-        </button>`).join("");
+      panel.innerHTML = runs.map((run, index) => {
+        const runStates = run.counts || {};
+        const runUnhealthy = Number(runStates.unavailable || 0) + Number(runStates.timeout || 0)
+          + Number(runStates.authentication_error || 0) + Number(runStates.recovery_failed || 0);
+        return `
+          <button class="watchdog-run-row ${index === 0 ? "selected" : ""}" type="button" data-run-index="${index}">
+            <span class="watchdog-run-indicator ${runUnhealthy ? "bad" : "ok"}"></span>
+            <span class="watchdog-run-title"><strong>${esc(date(run.generated_at))}</strong><small>ID: ${esc(run.execution_id)}</small></span>
+            <span class="watchdog-run-total">${Number(run.total) || 0} serviços</span>
+            <span class="watchdog-run-summary">${runUnhealthy ? `${runUnhealthy} com falha/timeout` : "Sem falhas reportadas"}</span>
+          </button>`;
+      }).join("");
       panel.querySelectorAll("[data-run-index]").forEach((button) => button.addEventListener("click", () => {
         panel.querySelectorAll(".watchdog-run-row").forEach((row) => row.classList.remove("selected"));
         button.classList.add("selected");
