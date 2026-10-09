@@ -8,6 +8,7 @@ on:
       - feature/watchdog-v0
       - test/watchdog-supabase-recovery-mocked
       - feature/watchdog-dashboard-foundation
+      - feature/watchdog-manual-dispatch
   schedule:
     # GitHub cron uses calendar days: runs on days 1, 6, 11, 16, 21, 26 and 31.
     # This approximates a five-day cadence; it is not a rolling 120-hour interval.
