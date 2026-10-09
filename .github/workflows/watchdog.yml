@@ -42,6 +42,7 @@ jobs:
       - name: Testes do Watchdog
         run: |
           node --test watchdog/tests/engine.test.mjs watchdog/tests/supabase.test.mjs watchdog/tests/config.test.mjs watchdog/tests/recovery.test.mjs watchdog/tests/recovery-supabase.test.mjs watchdog/tests/neo4j-aura.test.mjs watchdog/tests/recovery-neo4j-aura.test.mjs watchdog/tests/persist-report.test.mjs
+          node --check js/watchdog.js
 
       - name: Executar Watchdog (somente verificação)
         env:
