@@ -52,7 +52,7 @@ test("informa falha de gravação sem revelar credenciais", async () => {
       report,
       baseUrl: "https://panel.example.supabase.co",
       serviceRoleKey: "super-secret",
-      fetchImpl: async () => ({ ok: false, status: 401 })
+      fetchImpl: async () => ({ ok: false, status: 401, text: async () => "Invalid API key" })
     }),
     /HTTP 401/
   );
