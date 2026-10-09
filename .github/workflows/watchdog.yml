@@ -7,8 +7,11 @@ on:
       - main
       - feature/watchdog-v0
       - test/watchdog-supabase-recovery-mocked
+      - feature/watchdog-dashboard-foundation
   schedule:
-    - cron: "0 6 */3 * *"
+    # GitHub cron uses calendar days: runs on days 1, 6, 11, 16, 21, 26 and 31.
+    # This approximates a five-day cadence; it is not a rolling 120-hour interval.
+    - cron: "0 6 */5 * *"
 
 permissions:
   contents: read
@@ -38,11 +41,14 @@ jobs:
 
       - name: Testes do Watchdog
         run: |
-          node --test watchdog/tests/engine.test.mjs watchdog/tests/supabase.test.mjs watchdog/tests/config.test.mjs watchdog/tests/recovery.test.mjs watchdog/tests/recovery-supabase.test.mjs watchdog/tests/neo4j-aura.test.mjs watchdog/tests/recovery-neo4j-aura.test.mjs
+          node --test watchdog/tests/engine.test.mjs watchdog/tests/supabase.test.mjs watchdog/tests/config.test.mjs watchdog/tests/recovery.test.mjs watchdog/tests/recovery-supabase.test.mjs watchdog/tests/neo4j-aura.test.mjs watchdog/tests/recovery-neo4j-aura.test.mjs watchdog/tests/persist-report.test.mjs
+          node --check js/watchdog.js
 
-      - name: Executar Watchdog
+      - name: Executar Watchdog (somente verificação)
         env:
-          WATCHDOG_ENABLE_RECOVERY: "true"
+          # Recovery stays disabled until the real provider endpoints and safeguards
+          # are independently validated. Monitoring must not trigger destructive actions.
+          WATCHDOG_ENABLE_RECOVERY: "false"
           WATCHDOG_SUPABASE_ACCOUNT_1_TOKEN: ${{ secrets.WATCHDOG_SUPABASE_ACCOUNT_1_TOKEN }}
           WATCHDOG_SUPABASE_ACCOUNT_2_TOKEN: ${{ secrets.WATCHDOG_SUPABASE_ACCOUNT_2_TOKEN }}
           WATCHDOG_SUPABASE_ACCOUNT_2_ENEM_TOKEN: ${{ secrets.WATCHDOG_SUPABASE_ACCOUNT_2_ENEM_TOKEN }}
@@ -57,6 +63,17 @@ jobs:
           WATCHDOG_NEO4J_CLIENT_SECRET: ${{ secrets.WATCHDOG_NEO4J_CLIENT_SECRET }}
         run: node watchdog/src/main.mjs
 
+      - name: Persistir relatório no Supabase central
+        env:
+          WATCHDOG_PANEL_SUPABASE_URL: https://mwjkvtuvnzzyuddzjbnu.supabase.co
+          WATCHDOG_PANEL_SUPABASE_SERVICE_ROLE: ${{ secrets.WATCHDOG_PANEL_SUPABASE_SERVICE_ROLE }}
+        run: |
+          if [ -z "$WATCHDOG_PANEL_SUPABASE_SERVICE_ROLE" ]; then
+            echo "::warning::Segredo WATCHDOG_PANEL_SUPABASE_SERVICE_ROLE ausente. Relatório mantido no artefato do GitHub; o painel ainda não receberá este resultado."
+            exit 0
+          fi
+          node watchdog/src/persist-report.mjs
+
       - name: Publicar relatório
         if: always()
         uses: actions/upload-artifact@v4
@@ -66,3 +83,32 @@ jobs:
             watchdog/report.md
             watchdog/report.json
           if-no-files-found: warn
+          retention-days: 60
+
+  cleanup-old-watchdog-runs:
+    # Delete Watchdog workflow runs (including their logs and artifacts) older than
+    # 60 days. Run only on the schedule or on an intentional manual dispatch.
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: write
+      contents: read
+    steps:
+      - name: Excluir execuções do Watchdog com mais de 60 dias
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          CURRENT_RUN_ID: ${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          cutoff="$(date -u -d '60 days ago' +%Y-%m-%dT%H:%M:%SZ)"
+          echo "Retenção de execuções do Watchdog: 60 dias. Corte UTC: $cutoff"
+
+          gh api --paginate "repos/$GH_REPO/actions/workflows/watchdog.yml/runs?per_page=100" \
+            --jq ".workflow_runs[] | select(.created_at < \"$cutoff\" and (.id | tostring) != \"$CURRENT_RUN_ID\") | .id" |
+          while read -r run_id; do
+            [ -n "$run_id" ] || continue
+            echo "Excluindo execução antiga do Watchdog: $run_id"
+            gh api --method DELETE "repos/$GH_REPO/actions/runs/$run_id"
+          done
