@@ -117,3 +117,28 @@ sql/schema_painel_central.sql   <- já aplicado; fica aqui como referência
 - Documento vinculado diretamente ao contrato, não ao cliente.
 - Auditoria de INSERT/UPDATE/DELETE em clientes, contratos, financeiro e pagamentos.
 - Novas tabelas: `contrato_documentos` e `auditoria_eventos`.
+
+
+## Watchdog — histórico no painel
+
+O menu **Watchdog** lê as últimas 20 execuções da tabela `public.watchdog_runs` no Supabase central do painel. O workflow continua funcionando de forma independente do banco; se a persistência estiver indisponível, o relatório continua sendo publicado como artefato do GitHub Actions.
+
+### Configuração necessária no GitHub Actions
+
+Para que as execuções apareçam no painel, configure o segredo do repositório:
+
+1. Abra **Settings → Secrets and variables → Actions** no repositório.
+2. Clique em **New repository secret**.
+3. Nome: `WATCHDOG_PANEL_SUPABASE_SERVICE_ROLE`.
+4. Valor: a chave de servidor privilegiada (service role/secret key) **do projeto YansixPainelCRM**, cujo ref é `mwjkvtuvnzzyuddzjbnu`.
+
+Não use a chave do projeto Especialista em Pele nem de qualquer CRM de cliente. Nunca coloque essa chave em `js/config.js`, no navegador, em issues ou em commits. O workflow só usa o segredo no runner para inserir relatórios e excluir linhas com mais de 60 dias.
+
+A tabela `watchdog_runs` já tem RLS habilitado e permite leitura a usuários autenticados; o token privilegiado só deve existir nos GitHub Actions Secrets. A migration de referência está em `sql/watchdog_runs.sql`.
+
+### Retenção e recuperação
+
+- Artefatos e execuções antigas do workflow: retenção alvo de 60 dias.
+- Registros de histórico na tabela: limpeza automática de linhas com mais de 60 dias a cada persistência.
+- A recuperação automática permanece desabilitada até auditoria separada dos endpoints e das salvaguardas.
+- O cron `0 6 */5 * *` usa dias do mês (1, 6, 11, 16, 21, 26 e 31); aproxima cinco dias, mas não representa um intervalo móvel exato de 120 horas.
