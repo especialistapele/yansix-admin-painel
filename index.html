@@ -13,6 +13,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/watchdog.css?v=1">
 </head>
 <body>
 
@@ -55,6 +56,7 @@
     <a class="nav-link" data-view="contratos"><span class="nav-ico"></span> Contratos</a>
     <a class="nav-link" data-view="financeiro"><span class="nav-ico"></span> Financeiro</a>
     <a class="nav-link" data-view="monitoramento"><span class="nav-ico"></span> Monitoramento</a>
+    <a class="nav-link" data-view="watchdog"><span class="nav-ico"></span> Watchdog</a>
     <a class="nav-link" data-view="chamados"><span class="nav-ico"></span> Central de Chamados</a>
     <div class="sidebar-footer">
       <div class="account-badge" title="Sessão autenticada"><span class="account-dot"></span><span id="current-user-email">Sessão autenticada</span></div>
@@ -236,6 +238,27 @@
       </div>
       <div class="panel-card">
         <div id="monitoramento-list"><div class="empty">Nenhum CRM cadastrado ainda.</div></div>
+      </div>
+    </section>
+
+    <!-- ===================== WATCHDOG ===================== -->
+    <section class="view" id="view-watchdog">
+      <div class="view-head">
+        <div>
+          <h2>Watchdog de Infraestrutura</h2>
+          <p>Histórico independente de verificações dos bancos e serviços do ecossistema YANSIX.</p>
+        </div>
+      </div>
+      <div class="panel-card">
+        <div class="watchdog-toolbar">
+          <div><h3>Execuções recentes</h3><p class="watchdog-intro">O agendador do GitHub Actions inicia as verificações independentemente do banco central. Os relatórios ficam disponíveis aqui depois de persistidos no Supabase do painel.</p></div>
+          <button type="button" class="btn primary" id="watchdog-refresh">Atualizar histórico</button>
+        </div>
+        <div id="watchdog-runs-list"><div class="empty">Abra esta área para consultar o histórico do Watchdog.</div></div>
+      </div>
+      <div class="panel-card">
+        <h3>Detalhes da execução selecionada</h3>
+        <div id="watchdog-latest-details"><div class="empty">Selecione uma execução para ver os resultados por serviço.</div></div>
       </div>
     </section>
 
@@ -572,6 +595,7 @@
 <script src="js/config.js"></script>
 <script src="js/api.js?v=14.0"></script>
 <script src="js/app.js?v=14.0"></script>
+<script src="js/watchdog.js?v=1"></script>
 
 </body>
 </html>
