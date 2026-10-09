@@ -41,7 +41,7 @@ jobs:
 
       - name: Testes do Watchdog
         run: |
-          node --test watchdog/tests/engine.test.mjs watchdog/tests/supabase.test.mjs watchdog/tests/config.test.mjs watchdog/tests/recovery.test.mjs watchdog/tests/recovery-supabase.test.mjs watchdog/tests/neo4j-aura.test.mjs watchdog/tests/recovery-neo4j-aura.test.mjs
+          node --test watchdog/tests/engine.test.mjs watchdog/tests/supabase.test.mjs watchdog/tests/config.test.mjs watchdog/tests/recovery.test.mjs watchdog/tests/recovery-supabase.test.mjs watchdog/tests/neo4j-aura.test.mjs watchdog/tests/recovery-neo4j-aura.test.mjs watchdog/tests/persist-report.test.mjs
 
       - name: Executar Watchdog (somente verificação)
         env:
@@ -61,6 +61,17 @@ jobs:
           WATCHDOG_NEO4J_CLIENT_ID: ${{ secrets.WATCHDOG_NEO4J_CLIENT_ID }}
           WATCHDOG_NEO4J_CLIENT_SECRET: ${{ secrets.WATCHDOG_NEO4J_CLIENT_SECRET }}
         run: node watchdog/src/main.mjs
+
+      - name: Persistir relatório no Supabase central
+        env:
+          WATCHDOG_PANEL_SUPABASE_URL: https://mwjkvtuvnzzyuddzjbnu.supabase.co
+          WATCHDOG_PANEL_SUPABASE_SERVICE_ROLE: ${{ secrets.WATCHDOG_PANEL_SUPABASE_SERVICE_ROLE }}
+        run: |
+          if [ -z "$WATCHDOG_PANEL_SUPABASE_SERVICE_ROLE" ]; then
+            echo "::warning::Segredo WATCHDOG_PANEL_SUPABASE_SERVICE_ROLE ausente. Relatório mantido no artefato do GitHub; o painel ainda não receberá este resultado."
+            exit 0
+          fi
+          node watchdog/src/persist-report.mjs
 
       - name: Publicar relatório
         if: always()
