@@ -35,7 +35,9 @@ export async function persistReport({
     body: JSON.stringify(row)
   });
   if (!upsert.ok) {
-    throw new Error(`Persistência Watchdog falhou (HTTP ${upsert.status}). Verifique o segredo e as permissões do projeto central.`);
+    // Surface the Supabase/PostgREST error message for diagnosis, without logging request headers or secrets.
+    const detail = (await upsert.text()).slice(0, 500);
+    throw new Error(`Persistência Watchdog falhou (HTTP ${upsert.status}): ${detail || "sem detalhe no corpo da resposta"}`);
   }
 
   const cutoff = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000).toISOString();
