@@ -57,3 +57,20 @@ test("informa falha de gravação sem revelar credenciais", async () => {
     /HTTP 401/
   );
 });
+
+test("envia a nova chave sb_secret apenas no header apikey, sem Bearer", async () => {
+  const calls = [];
+  const fetchImpl = async (url, options) => {
+    calls.push({ url, options });
+    return { ok: true, status: 204 };
+  };
+  await persistReport({
+    report,
+    baseUrl: "https://panel.example.supabase.co",
+    serviceRoleKey: "sb_secret_example",
+    fetchImpl,
+    now: new Date("2026-10-09T12:00:00.000Z")
+  });
+  assert.equal(calls[0].options.headers.apikey, "sb_secret_example");
+  assert.equal("Authorization" in calls[0].options.headers, false);
+});
