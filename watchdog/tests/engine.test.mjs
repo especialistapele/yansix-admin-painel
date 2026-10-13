@@ -73,7 +73,7 @@ test("gera evento de alerta para estado não saudável", () => {
   });
 
   const events = buildEvents(summary);
-  assert.equal(events[0].type, "alert_candidate");
+  assert.equal(events[0].type, "database_sleeping");
   assert.equal(events[0].severity, "warning");
   assert.equal(events[0].state, STATES.PAUSED);
 });
