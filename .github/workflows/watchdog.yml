@@ -9,9 +9,11 @@ on:
       - test/watchdog-supabase-recovery-mocked
       - feature/watchdog-dashboard-foundation
       - fix/watchdog-neo4j-nested-state
+      - feat/watchdog-scoped-neo4j-recovery
   schedule:
-    # GitHub cron uses calendar days: runs on days 1, 6, 11, 16, 21, 26 and 31.
-    # This approximates a five-day cadence; it is not a rolling 120-hour interval.
+    # Detect and recover a paused Neo4j instance promptly; only neo4j-kalatrace is allowlisted.
+    - cron: "*/30 * * * *"
+    # Separate five-day cadence for housekeeping/retention.
     - cron: "0 6 */5 * *"
 
 permissions:
@@ -47,9 +49,10 @@ jobs:
 
       - name: Executar Watchdog (somente verificação)
         env:
-          # Recovery stays disabled until the real provider endpoints and safeguards
-          # are independently validated. Monitoring must not trigger destructive actions.
-          WATCHDOG_ENABLE_RECOVERY: "false"
+          # Recovery is enabled only for explicitly allowlisted services.
+          # This limits automatic resume to KALATRACE Neo4j; Supabase projects remain excluded.
+          WATCHDOG_ENABLE_RECOVERY: "true"
+          WATCHDOG_RECOVERY_ALLOW_SERVICES: "neo4j-kalatrace"
           WATCHDOG_SUPABASE_ACCOUNT_1_TOKEN: ${{ secrets.WATCHDOG_SUPABASE_ACCOUNT_1_TOKEN }}
           WATCHDOG_SUPABASE_ACCOUNT_2_TOKEN: ${{ secrets.WATCHDOG_SUPABASE_ACCOUNT_2_TOKEN }}
           WATCHDOG_SUPABASE_ACCOUNT_2_ENEM_TOKEN: ${{ secrets.WATCHDOG_SUPABASE_ACCOUNT_2_ENEM_TOKEN }}
@@ -89,7 +92,7 @@ jobs:
   cleanup-old-watchdog-runs:
     # Delete Watchdog workflow runs (including their logs and artifacts) older than
     # 60 days. Run only on the schedule or on an intentional manual dispatch.
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'schedule' && github.event.schedule == '0 6 */5 * *')
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:

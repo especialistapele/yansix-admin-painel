@@ -1,4 +1,8 @@
-export function canRecover(service, result) {
+export function canRecover(service, result, allowedServiceIds = new Set()) {
+  const allowlist = allowedServiceIds == null ? null : allowedServiceIds instanceof Set ? allowedServiceIds : new Set(allowedServiceIds || []);
+  if (allowlist && !allowlist.has(service.id)) {
+    return { allowed: false, reason: "service_not_allowlisted" };
+  }
   if (!service.recovery?.enabled) {
     return { allowed: false, reason: "recovery_disabled" };
   }
@@ -23,9 +27,9 @@ export function canRecover(service, result) {
     return { allowed: false, reason: "management_credentials_missing" };
   }
 
-  const allowlist = service.recovery.allowProjectRefs;
+  const projectAllowlist = service.recovery.allowProjectRefs;
   const targetId = service.provider === "supabase" ? service.projectRef : service.instanceId;
-  if (Array.isArray(allowlist) && allowlist.length > 0 && !allowlist.includes(targetId)) {
+  if (Array.isArray(projectAllowlist) && projectAllowlist.length > 0 && !projectAllowlist.includes(targetId)) {
     return { allowed: false, reason: "target_not_allowlisted" };
   }
 
