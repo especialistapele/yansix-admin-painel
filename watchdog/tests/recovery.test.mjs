@@ -11,8 +11,8 @@ test("não recupera serviço saudável",()=>assert.deepEqual(canRecover(baseServ
 test("não recupera serviço com provider não suportado",()=>assert.deepEqual(canRecover({...baseService,provider:"outro"},{state:STATES.PAUSED}),{allowed:false,reason:"provider_not_supported"}));
 test("não recupera sem token",()=>assert.deepEqual(canRecover({...baseService,managementToken:undefined},{state:STATES.PAUSED}),{allowed:false,reason:"management_credentials_missing"}));
 test("não recupera sem project ref",()=>assert.deepEqual(canRecover({...baseService,projectRef:undefined},{state:STATES.PAUSED}),{allowed:false,reason:"management_credentials_missing"}));
-test("não recupera projeto fora da allowlist",()=>assert.deepEqual(canRecover({...baseService,projectRef:"evqbhkrjguramcphdjtk"},{state:STATES.PAUSED}),{allowed:false,reason:"target_not_allowlisted"}));
-test("autoriza Cashback pausado com configuração correta",()=>assert.deepEqual(canRecover(baseService,{state:STATES.PAUSED}),{allowed:true,reason:"paused_project_restore_authorized"}));
+test("não recupera projeto fora da allowlist",()=>assert.deepEqual(canRecover({...baseService,projectRef:"evqbhkrjguramcphdjtk"},{state:STATES.PAUSED},new Set(["supabase-banco-cashback"])),{allowed:false,reason:"target_not_allowlisted"}));
+test("autoriza Cashback pausado com configuração correta",()=>assert.deepEqual(canRecover(baseService,{state:STATES.PAUSED},new Set(["supabase-banco-cashback"])),{allowed:true,reason:"paused_project_restore_authorized"}));
 test("resume a política sem expor credenciais",()=>{const summary=recoveryPolicySummary(baseService); assert.deepEqual(summary,{serviceId:"supabase-banco-cashback",enabled:true,maxAttempts:1,timeoutMs:15000,verifyDelayMs:10000,allowProjectRefs:["uaqbnwwjqhhnqzsavbkh"]}); assert.equal("managementToken" in summary,false);});
 
 test("envia POST para /restore e Authorization Bearer sem expor token",async()=>{
@@ -41,3 +41,6 @@ test("403 vira erro de autenticação/permissão",async()=>{const adapter=create
 test("429 é tratado como rate limited",async()=>{const adapter=createSupabaseRecoveryAdapter({fetchImpl:async()=>({status:429,ok:false})}); assert.equal((await adapter(baseService)).state,RECOVERY_STATES.RATE_LIMITED);});
 test("erro 5xx é tratado como unavailable",async()=>{const adapter=createSupabaseRecoveryAdapter({fetchImpl:async()=>({status:503,ok:false})}); assert.equal((await adapter(baseService)).state,STATES.UNAVAILABLE);});
 test("timeout é tratado sem expor token",async()=>{const error=new Error("timed out");error.name="TimeoutError";const adapter=createSupabaseRecoveryAdapter({fetchImpl:async()=>{throw error;}});const result=await adapter(baseService);assert.equal(result.state,STATES.TIMEOUT);assert.equal(JSON.stringify(result).includes("secret-token"),false);});
+
+test("não recupera serviço que não esteja na allowlist global de recuperação",()=>assert.deepEqual(canRecover(baseService,{state:STATES.PAUSED},new Set(["neo4j-kalatrace"])),{allowed:false,reason:"service_not_allowlisted"}));
+test("não recupera quando a allowlist global está vazia",()=>assert.deepEqual(canRecover(baseService,{state:STATES.PAUSED}),{allowed:false,reason:"service_not_allowlisted"}));
