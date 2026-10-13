@@ -17,15 +17,66 @@ export function summarize(run) {
 }
 
 export function buildEvents(summary) {
-  return summary.results.map((result) => ({
-    executionId: summary.executionId,
-    serviceId: result.serviceId,
-    type: result.state === STATES.HEALTHY || result.state === STATES.RECOVERED || result.state === STATES.CONFIGURATION_ERROR ? "check" : "alert_candidate",
-    severity: result.state === STATES.HEALTHY || result.state === STATES.RECOVERED || result.state === STATES.CONFIGURATION_ERROR ? "info" : "warning",
-    state: result.state,
-    message: result.reason || result.error || `Estado detectado: ${result.state}`,
-    occurredAt: result.checkedAt
-  }));
+  const events = [];
+  for (const result of summary.results) {
+    const sleepingDetected = result.detectedState === STATES.PAUSED || result.state === STATES.PAUSED;
+    if (sleepingDetected) {
+      events.push({
+        executionId: summary.executionId,
+        serviceId: result.serviceId,
+        type: "database_sleeping",
+        severity: "warning",
+        state: STATES.PAUSED,
+        message: `Banco dormindo detectado: ${result.name || result.serviceId}.`,
+        occurredAt: result.sleepDetectedAt || result.checkedAt
+      });
+    }
+
+    if (result.recovery?.attempted) {
+      events.push({
+        executionId: summary.executionId,
+        serviceId: result.serviceId,
+        type: "wake_attempt",
+        severity: "info",
+        state: "recovery_requested",
+        message: `Tentativa de acordar iniciada para ${result.name || result.serviceId}.`,
+        occurredAt: result.recoveryAttemptedAt || result.checkedAt
+      });
+
+      if (result.state === "recovered" && result.recovery.state === STATES.HEALTHY) {
+        events.push({
+          executionId: summary.executionId,
+          serviceId: result.serviceId,
+          type: "database_awakened",
+          severity: "info",
+          state: "recovered",
+          message: `Banco acordado e estado operacional confirmado: ${result.name || result.serviceId}.`,
+          occurredAt: result.recoveryCompletedAt || summary.generatedAt
+        });
+      } else {
+        events.push({
+          executionId: summary.executionId,
+          serviceId: result.serviceId,
+          type: "wake_failed",
+          severity: "error",
+          state: "recovery_failed",
+          message: `Falha ao acordar ${result.name || result.serviceId}: ${result.recovery.reason || "estado operacional não confirmado"}.`,
+          occurredAt: result.recoveryCompletedAt || summary.generatedAt
+        });
+      }
+    } else if (!sleepingDetected) {
+      events.push({
+        executionId: summary.executionId,
+        serviceId: result.serviceId,
+        type: result.state === STATES.HEALTHY || result.state === STATES.RECOVERED || result.state === STATES.CONFIGURATION_ERROR ? "check" : "alert_candidate",
+        severity: result.state === STATES.HEALTHY || result.state === STATES.RECOVERED || result.state === STATES.CONFIGURATION_ERROR ? "info" : "warning",
+        state: result.state,
+        message: result.reason || result.error || `Estado detectado: ${result.state}`,
+        occurredAt: result.checkedAt
+      });
+    }
+  }
+  return events.sort((a, b) => String(a.occurredAt || "").localeCompare(String(b.occurredAt || "")));
 }
 
 export function toMarkdown(summary, configuration = []) {
