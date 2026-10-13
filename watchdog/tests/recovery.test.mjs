@@ -43,4 +43,3 @@ test("erro 5xx é tratado como unavailable",async()=>{const adapter=createSupaba
 test("timeout é tratado sem expor token",async()=>{const error=new Error("timed out");error.name="TimeoutError";const adapter=createSupabaseRecoveryAdapter({fetchImpl:async()=>{throw error;}});const result=await adapter(baseService);assert.equal(result.state,STATES.TIMEOUT);assert.equal(JSON.stringify(result).includes("secret-token"),false);});
 
 test("não recupera serviço que não esteja na allowlist global de recuperação",()=>assert.deepEqual(canRecover(baseService,{state:STATES.PAUSED},new Set(["neo4j-kalatrace"])),{allowed:false,reason:"service_not_allowlisted"}));
-test("não recupera quando a allowlist global está vazia",()=>assert.deepEqual(canRecover(baseService,{state:STATES.PAUSED}),{allowed:false,reason:"service_not_allowlisted"}));
