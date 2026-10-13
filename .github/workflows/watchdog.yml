@@ -2,6 +2,8 @@ name: YANSIX Watchdog
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: "17 12 */5 * *"
   push:
     branches:
       - feature/watchdog-v0
