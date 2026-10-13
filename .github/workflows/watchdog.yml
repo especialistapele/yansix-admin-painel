@@ -11,6 +11,7 @@ on:
       - fix/watchdog-neo4j-nested-state
       - feat/watchdog-scoped-neo4j-recovery
       - feat/watchdog-sleep-recovery-history
+      - feat/watchdog-60-day-sleep-timeline
   schedule:
     # Detect and recover a paused Neo4j instance promptly; only neo4j-kalatrace is allowlisted.
     - cron: "*/30 * * * *"
