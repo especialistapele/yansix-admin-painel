@@ -10,6 +10,7 @@ on:
       - feature/watchdog-dashboard-foundation
       - fix/watchdog-neo4j-nested-state
       - feat/watchdog-scoped-neo4j-recovery
+      - feat/watchdog-sleep-recovery-history
   schedule:
     # Detect and recover a paused Neo4j instance promptly; only neo4j-kalatrace is allowlisted.
     - cron: "*/30 * * * *"
@@ -47,7 +48,7 @@ jobs:
           node --test watchdog/tests/engine.test.mjs watchdog/tests/supabase.test.mjs watchdog/tests/config.test.mjs watchdog/tests/recovery.test.mjs watchdog/tests/recovery-supabase.test.mjs watchdog/tests/neo4j-aura.test.mjs watchdog/tests/recovery-neo4j-aura.test.mjs watchdog/tests/persist-report.test.mjs
           node --check js/watchdog.js
 
-      - name: Executar Watchdog (somente verificação)
+      - name: Executar Watchdog (monitoramento e recuperação autorizada)
         env:
           # Recovery is enabled only for explicitly allowlisted services.
           # This limits automatic resume to KALATRACE Neo4j; Supabase projects remain excluded.

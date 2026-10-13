@@ -19,7 +19,7 @@
     healthy: "Saudável", recovered: "Recuperado", unavailable: "Indisponível",
     timeout: "Tempo esgotado", authentication_error: "Erro de autenticação",
     configuration_error: "Configuração pendente", unknown: "Desconhecido",
-    paused: "Pausado", recovery_failed: "Falha na recuperação"
+    paused: "Pausado", recovery_failed: "Falha na recuperação", recovery_requested: "Acordando", database_sleeping: "Banco dormindo", database_awakened: "Banco acordado", wake_attempt: "Tentativa de acordar", wake_failed: "Falha ao acordar"
   }[value] || value || "Sem estado");
   const tone = (value) => ["healthy", "recovered"].includes(value) ? "ok"
     : ["unavailable", "timeout", "authentication_error", "recovery_failed"].includes(value) ? "bad"
@@ -39,11 +39,13 @@
         <td>${item.latencyMs == null ? "—" : `${esc(item.latencyMs)} ms`}</td>
         <td>${esc(item.reason || item.error || "—")}</td>
       </tr>`).join("");
+    const events = Array.isArray(run.events) ? run.events.slice().sort((a, b) => String(a.occurredAt || "").localeCompare(String(b.occurredAt || ""))) : [];
+    const eventRows = events.map((event) => `\n      <tr><td>${esc(date(event.occurredAt))}</td><td><span class="watchdog-state ${tone(event.state)}">${esc(label(event.type))}</span></td><td>${esc(event.message || event.state || "Evento")}</td></tr>`).join("");
     details.innerHTML = `
       <div class="watchdog-run-meta"><div><span>Iniciada</span><strong>${esc(date(run.started_at))}</strong></div><div><span>Relatório gerado</span><strong>${esc(date(run.generated_at))}</strong></div><div><span>Serviços verificados</span><strong>${Number(run.total) || 0}</strong></div></div>
       <div class="watchdog-counts">${countCards || '<span class="meta">Sem contagens disponíveis.</span>'}</div>
       <div class="table-responsive"><table class="watchdog-table"><thead><tr><th>Serviço</th><th>Estado</th><th>HTTP</th><th>Latência</th><th>Detalhe</th></tr></thead><tbody>${rows || '<tr><td colspan="5">Esta execução não possui detalhes de serviços.</td></tr>'}</tbody></table></div>
-      <p class="meta watchdog-footnote">A recuperação automática permanece desativada. O acionamento manual inicia apenas as verificações; não desperta, reinicia nem altera os serviços monitorados.</p>`;
+      <h3>Histórico de sono e recuperação</h3><div class="table-responsive"><table class="watchdog-table"><thead><tr><th>Data e hora</th><th>Evento</th><th>Registro</th></tr></thead><tbody>${eventRows || "<tr><td colspan=\"3\">Nenhum evento de sono ou recuperação nesta execução.</td></tr>"}</tbody></table></div><p class="meta watchdog-footnote">O Watchdog verifica os serviços a cada 30 minutos e tenta acordar automaticamente apenas o KALATRACE Neo4j quando a API confirma que ele está pausado. A recuperação só é registrada após confirmar o estado operacional.</p>`;
   }
 
   async function load() {
@@ -106,7 +108,7 @@
     runNow.addEventListener("click", async () => {
       if (dispatching) return;
       const accepted = window.confirm(
-        "Iniciar agora uma nova rodada de verificações do Watchdog?\n\nIsso executa somente os testes de saúde. Nenhum serviço será despertado, reiniciado ou alterado."
+        "Iniciar agora uma nova rodada de verificações do Watchdog?\n\nAlém das verificações, esta execução pode tentar acordar automaticamente o KALATRACE Neo4j se a API confirmar que ele está pausado. Os demais bancos não serão alterados."
       );
       if (!accepted) return;
 
@@ -124,7 +126,7 @@
         }
         if (!data?.accepted) throw new Error(data?.error || "O GitHub não confirmou o acionamento.");
         showDispatchStatus(
-          "Solicitação aceita. O GitHub Actions iniciará uma nova execução; ela aparecerá no histórico após concluir e salvar o relatório. A solicitação não confirma que os testes já terminaram.",
+          "Solicitação aceita. O GitHub Actions iniciará uma nova execução; ela aparecerá no histórico após concluir e salvar o relatório. Os eventos de banco dormindo, tentativa de acordar e recuperação confirmada aparecerão no histórico depois que o relatório for salvo.",
           "success"
         );
       } catch (error) {

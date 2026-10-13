@@ -32,6 +32,10 @@ if (recoveryEnabled) {
   for (const result of run.results) {
     if (result.state !== "paused") continue;
 
+    // Preserve the original detection so the report can log sleep and recovery as separate events.
+    result.detectedState = result.state;
+    result.sleepDetectedAt = result.checkedAt;
+
     const service = services.find((item) => item.id === result.serviceId);
     if (!service) continue;
 
@@ -47,7 +51,9 @@ if (recoveryEnabled) {
       continue;
     }
 
+    result.recoveryAttemptedAt = new Date().toISOString();
     result.recovery = { attempted: true, ...(await recoveryAdapter(service)) };
+    result.recoveryCompletedAt = new Date().toISOString();
 
     if (result.recovery.state === "healthy") {
       result.state = "recovered";

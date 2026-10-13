@@ -73,7 +73,41 @@ test("gera evento de alerta para estado não saudável", () => {
   });
 
   const events = buildEvents(summary);
-  assert.equal(events[0].type, "alert_candidate");
+  assert.equal(events[0].type, "database_sleeping");
   assert.equal(events[0].severity, "warning");
   assert.equal(events[0].state, STATES.PAUSED);
+});
+
+test("registra sono, tentativa e recuperação confirmada em eventos separados", () => {
+  const summary = {
+    executionId: "exec-recovery",
+    generatedAt: "2026-10-13T10:02:00.000Z",
+    results: [{
+      executionId: "exec-recovery", serviceId: "neo4j-kalatrace", name: "KALATRACE Neo4j Aura",
+      state: "recovered", detectedState: STATES.PAUSED,
+      checkedAt: "2026-10-13T10:00:00.000Z", sleepDetectedAt: "2026-10-13T10:00:00.000Z",
+      recoveryAttemptedAt: "2026-10-13T10:00:02.000Z", recoveryCompletedAt: "2026-10-13T10:01:00.000Z",
+      recovery: { attempted: true, state: STATES.HEALTHY, reason: "aura_instance_resumed_and_running" }
+    }]
+  };
+  const events = buildEvents(summary);
+  assert.deepEqual(events.map((event) => event.type), ["database_sleeping", "wake_attempt", "database_awakened"]);
+  assert.equal(events[0].occurredAt, "2026-10-13T10:00:00.000Z");
+  assert.equal(events[2].occurredAt, "2026-10-13T10:01:00.000Z");
+});
+
+test("não registra banco acordado quando a recuperação falha", () => {
+  const summary = {
+    executionId: "exec-failed", generatedAt: "2026-10-13T10:02:00.000Z",
+    results: [{
+      executionId: "exec-failed", serviceId: "neo4j-kalatrace", name: "KALATRACE Neo4j Aura",
+      state: "recovery_failed", detectedState: STATES.PAUSED,
+      checkedAt: "2026-10-13T10:00:00.000Z", recoveryAttemptedAt: "2026-10-13T10:00:02.000Z",
+      recoveryCompletedAt: "2026-10-13T10:01:00.000Z",
+      recovery: { attempted: true, state: STATES.RECOVERY_FAILED, reason: "not_running" }
+    }]
+  };
+  const events = buildEvents(summary);
+  assert.deepEqual(events.map((event) => event.type), ["database_sleeping", "wake_attempt", "wake_failed"]);
+  assert.equal(events.some((event) => event.type === "database_awakened"), false);
 });
