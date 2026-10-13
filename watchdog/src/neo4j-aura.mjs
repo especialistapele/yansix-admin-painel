@@ -14,14 +14,39 @@ async function getAccessToken(service, fetchImpl) {
   return body.access_token;
 }
 function unwrapInstance(body) {
-  if (body && typeof body === "object" && !Array.isArray(body)) {
-    if (body.data && typeof body.data === "object" && !Array.isArray(body.data)) return body.data;
-    if (body.instance && typeof body.instance === "object") return body.instance;
+  let current = body;
+  for (let depth = 0; depth < 6; depth += 1) {
+    if (Array.isArray(current)) {
+      current = current[0];
+      continue;
+    }
+    if (!current || typeof current !== "object") break;
+    if (current.instance && typeof current.instance === "object") { current = current.instance; continue; }
+    if (current.data && (typeof current.data === "object" || Array.isArray(current.data))) { current = current.data; continue; }
+    break;
   }
-  return body;
+  return current;
+}
+function readProviderState(value, depth = 0) {
+  if (depth > 6 || value == null) return "";
+  if (Array.isArray(value)) {
+    for (const item of value) { const found = readProviderState(item, depth + 1); if (found) return found; }
+    return "";
+  }
+  if (typeof value !== "object") return "";
+  for (const key of ["status", "state"]) {
+    if (typeof value[key] === "string" && value[key].trim()) return value[key];
+  }
+  for (const key of ["data", "instance", "instances", "result"]) {
+    if (value[key] && typeof value[key] === "object") {
+      const found = readProviderState(value[key], depth + 1);
+      if (found) return found;
+    }
+  }
+  return "";
 }
 function classify(instance, status = 200) {
-  const providerState = String(instance?.status ?? instance?.state ?? "").toUpperCase();
+  const providerState = readProviderState(instance).toUpperCase();
   if (["RUNNING", "ACTIVE", "ONLINE"].includes(providerState)) return { state: STATES.HEALTHY, status, providerState, reason: "aura_instance_running" };
   if (["PAUSED", "INACTIVE"].includes(providerState)) return { state: STATES.PAUSED, status, providerState, reason: "aura_instance_paused" };
   return { state: STATES.UNKNOWN, status, providerState: providerState || null, reason: "aura_instance_unknown_state" };
