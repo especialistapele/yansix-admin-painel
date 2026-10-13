@@ -18,6 +18,9 @@ const adapters = {
 };
 
 const recoveryEnabled = process.env.WATCHDOG_ENABLE_RECOVERY === "true";
+// Recovery is opt-in per service. An empty allowlist intentionally authorizes no recovery.
+const recoveryAllowlist = new Set((process.env.WATCHDOG_RECOVERY_ALLOW_SERVICES || "")
+  .split(",").map((id) => id.trim()).filter(Boolean));
 const recoveryAdapters = {
   supabase: createSupabaseRecoveryAdapter(),
   neo4j_aura: createNeo4jAuraRecoveryAdapter()
@@ -32,7 +35,7 @@ if (recoveryEnabled) {
     const service = services.find((item) => item.id === result.serviceId);
     if (!service) continue;
 
-    const authorization = canRecover(service, result);
+    const authorization = canRecover(service, result, recoveryAllowlist);
     if (!authorization.allowed) {
       result.recovery = { attempted: false, reason: authorization.reason };
       continue;
