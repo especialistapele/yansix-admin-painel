@@ -25,7 +25,7 @@
     : ["unavailable", "timeout", "authentication_error", "recovery_failed"].includes(value) ? "bad"
     : ["paused", "unknown", "configuration_error"].includes(value) ? "warn" : "neutral";
 
-  function renderDetails(run) {
+  function renderDetails(run, historicalEvents = []) {
     const results = Array.isArray(run.results) ? run.results : [];
     const counts = run.counts || {};
     const countCards = Object.entries(counts).map(([key, value]) =>
@@ -39,13 +39,15 @@
         <td>${item.latencyMs == null ? "—" : `${esc(item.latencyMs)} ms`}</td>
         <td>${esc(item.reason || item.error || "—")}</td>
       </tr>`).join("");
-    const events = Array.isArray(run.events) ? run.events.slice().sort((a, b) => String(a.occurredAt || "").localeCompare(String(b.occurredAt || ""))) : [];
-    const eventRows = events.map((event) => `\n      <tr><td>${esc(date(event.occurredAt))}</td><td><span class="watchdog-state ${tone(event.state)}">${esc(label(event.type))}</span></td><td>${esc(event.message || event.state || "Evento")}</td></tr>`).join("");
+    const events = historicalEvents.filter((event) => ["database_sleeping", "wake_attempt", "database_awakened", "wake_failed"].includes(event.type))
+      .slice().sort((a, b) => String(b.occurredAt || "").localeCompare(String(a.occurredAt || "")));
+    const eventRows = events.map((event) => `
+      <tr><td>${esc(date(event.occurredAt))}</td><td><span class="watchdog-state ${tone(event.state)}">${esc(label(event.type))}</span></td><td>${esc(event.message || event.state || "Evento")}</td></tr>`).join("");
     details.innerHTML = `
       <div class="watchdog-run-meta"><div><span>Iniciada</span><strong>${esc(date(run.started_at))}</strong></div><div><span>Relatório gerado</span><strong>${esc(date(run.generated_at))}</strong></div><div><span>Serviços verificados</span><strong>${Number(run.total) || 0}</strong></div></div>
       <div class="watchdog-counts">${countCards || '<span class="meta">Sem contagens disponíveis.</span>'}</div>
       <div class="table-responsive"><table class="watchdog-table"><thead><tr><th>Serviço</th><th>Estado</th><th>HTTP</th><th>Latência</th><th>Detalhe</th></tr></thead><tbody>${rows || '<tr><td colspan="5">Esta execução não possui detalhes de serviços.</td></tr>'}</tbody></table></div>
-      <h3>Histórico de sono e recuperação</h3><div class="table-responsive"><table class="watchdog-table"><thead><tr><th>Data e hora</th><th>Evento</th><th>Registro</th></tr></thead><tbody>${eventRows || "<tr><td colspan=\"3\">Nenhum evento de sono ou recuperação nesta execução.</td></tr>"}</tbody></table></div><p class="meta watchdog-footnote">O Watchdog verifica os serviços a cada 30 minutos e tenta acordar automaticamente apenas o KALATRACE Neo4j quando a API confirma que ele está pausado. A recuperação só é registrada após confirmar o estado operacional.</p>`;
+      <h3>Histórico de sono e recuperação — últimos 60 dias</h3><p class="meta">Eventos registrados: ${events.length}. A lista inclui detecção de sono, tentativa de acordar, recuperação confirmada e falhas.</p><div class="table-responsive"><table class="watchdog-table"><thead><tr><th>Data e hora</th><th>Evento</th><th>Registro</th></tr></thead><tbody>${eventRows || "<tr><td colspan=\"3\">Nenhum evento de sono ou recuperação nesta execução.</td></tr>"}</tbody></table></div><p class="meta watchdog-footnote">O Watchdog verifica os serviços a cada 30 minutos e tenta acordar automaticamente apenas o KALATRACE Neo4j quando a API confirma que ele está pausado. A recuperação só é registrada após confirmar o estado operacional.</p>`;
   }
 
   async function load() {
@@ -55,11 +57,21 @@
     refresh.textContent = "Atualizando…";
     panel.innerHTML = '<div class="empty">Consultando histórico do Watchdog…</div>';
     try {
-      const { data, error } = await SUPABASE_CLIENT.from("watchdog_runs")
-        .select("execution_id,started_at,generated_at,total,counts,configuration,events,results,created_at")
-        .order("created_at", { ascending: false }).limit(20);
-      if (error) throw error;
-      const runs = data || [];
+      const cutoff = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString();
+      const allRuns = [];
+      for (let offset = 0; ; offset += 1000) {
+        const { data, error } = await SUPABASE_CLIENT.from("watchdog_runs")
+          .select("execution_id,started_at,generated_at,total,counts,configuration,events,results,created_at")
+          .gte("created_at", cutoff)
+          .order("created_at", { ascending: false })
+          .range(offset, offset + 999);
+        if (error) throw error;
+        const page = data || [];
+        allRuns.push(...page);
+        if (page.length < 1000) break;
+      }
+      const historicalEvents = allRuns.flatMap((run) => Array.isArray(run.events) ? run.events : []);
+      const runs = allRuns.slice(0, 20);
       if (!runs.length) {
         panel.innerHTML = '<div class="empty">Nenhuma execução foi registrada ainda. Depois que o segredo de integração estiver configurado e o workflow executar, o histórico aparecerá aqui.</div>';
         details.innerHTML = '<div class="empty">Ainda não há detalhes para exibir.</div>';
@@ -84,9 +96,9 @@
       panel.querySelectorAll("[data-run-index]").forEach((button) => button.addEventListener("click", () => {
         panel.querySelectorAll(".watchdog-run-row").forEach((row) => row.classList.remove("selected"));
         button.classList.add("selected");
-        renderDetails(runs[Number(button.dataset.runIndex)]);
+        renderDetails(runs[Number(button.dataset.runIndex)], historicalEvents);
       }));
-      renderDetails(latest);
+      renderDetails(latest, historicalEvents);
     } catch (error) {
       console.error("Falha ao carregar histórico Watchdog:", error);
       panel.innerHTML = `<div class="empty watchdog-error">Não foi possível consultar o histórico. Confirme a migration da tabela watchdog_runs e a sessão do operador. <small>${esc(error.message || "Erro de conexão")}</small></div>`;
