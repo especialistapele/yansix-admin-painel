@@ -1,4 +1,8 @@
-export function canRecover(service, result) {
+export function canRecover(service, result, allowedServiceIds = new Set()) {
+  const allowlist = allowedServiceIds instanceof Set ? allowedServiceIds : new Set(allowedServiceIds || []);
+  if (!allowlist.has(service.id)) {
+    return { allowed: false, reason: "service_not_allowlisted" };
+  }
   if (!service.recovery?.enabled) {
     return { allowed: false, reason: "recovery_disabled" };
   }
