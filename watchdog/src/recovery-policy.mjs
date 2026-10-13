@@ -1,4 +1,4 @@
-export function canRecover(service, result, allowedServiceIds) {
+export function canRecover(service, result, allowedServiceIds = new Set()) {
   const allowlist = allowedServiceIds == null ? null : allowedServiceIds instanceof Set ? allowedServiceIds : new Set(allowedServiceIds || []);
   if (allowlist && !allowlist.has(service.id)) {
     return { allowed: false, reason: "service_not_allowlisted" };
