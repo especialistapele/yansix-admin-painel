@@ -4,11 +4,36 @@ import { STATES } from "./engine.mjs";
 const API_BASE = "https://api.neo4j.io";
 export const NEO4J_RECOVERY_STATES = Object.freeze({ RATE_LIMITED: "rate_limited", AUTHENTICATION_ERROR: STATES.AUTHENTICATION_ERROR, UNAVAILABLE: STATES.UNAVAILABLE, TIMEOUT: STATES.TIMEOUT, UNKNOWN: STATES.UNKNOWN });
 function unwrapInstance(body) {
-  if (body && typeof body === "object" && !Array.isArray(body)) {
-    if (body.data && typeof body.data === "object" && !Array.isArray(body.data)) return body.data;
-    if (body.instance && typeof body.instance === "object") return body.instance;
+  let current = body;
+  for (let depth = 0; depth < 6; depth += 1) {
+    if (Array.isArray(current)) {
+      current = current[0];
+      continue;
+    }
+    if (!current || typeof current !== "object") break;
+    if (current.instance && typeof current.instance === "object") { current = current.instance; continue; }
+    if (current.data && (typeof current.data === "object" || Array.isArray(current.data))) { current = current.data; continue; }
+    break;
   }
-  return body;
+  return current;
+}
+function readProviderState(value, depth = 0) {
+  if (depth > 6 || value == null) return "";
+  if (Array.isArray(value)) {
+    for (const item of value) { const found = readProviderState(item, depth + 1); if (found) return found; }
+    return "";
+  }
+  if (typeof value !== "object") return "";
+  for (const key of ["status", "state"]) {
+    if (typeof value[key] === "string" && value[key].trim()) return value[key];
+  }
+  for (const key of ["data", "instance", "instances", "result"]) {
+    if (value[key] && typeof value[key] === "object") {
+      const found = readProviderState(value[key], depth + 1);
+      if (found) return found;
+    }
+  }
+  return "";
 }
 async function token(service, fetchImpl) {
   const basic = Buffer.from(`${service.clientId}:${service.clientSecret}`).toString("base64");
@@ -34,7 +59,7 @@ export function createNeo4jAuraRecoveryAdapter({ fetchImpl = fetch, sleepImpl = 
         if (delay > 0) await sleepImpl(delay);
         const response = await fetchImpl(`${API_BASE}/v1/instances/${encodeURIComponent(service.instanceId)}`, { method: "GET", headers: baseHeaders, signal: AbortSignal.timeout(service.recovery?.timeoutMs || 15000) });
         const body = await response.json().catch(() => null), instance = unwrapInstance(body);
-        const state = String(instance?.status ?? instance?.state ?? "").toUpperCase();
+        const state = readProviderState(instance).toUpperCase();
         verification = { attempt, status: response.status, providerState: state || null };
         if (response.ok && ["RUNNING", "ACTIVE", "ONLINE"].includes(state)) return { state: STATES.HEALTHY, status: resumeResponse.status, reason: "aura_instance_resumed_and_running", providerState: state, verificationAttempt: attempt, latencyMs: Math.round(performance.now() - started) };
       }
