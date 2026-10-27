@@ -1,59 +1,39 @@
-# YANSIX Watchdog de Infraestrutura — v0
+# YANSIX Watchdog de Infraestrutura
 
-Módulo independente de monitoramento de infraestrutura.
+Módulo de monitoramento e recuperação controlada da infraestrutura do ecossistema YANSIX. O workflow roda pelo GitHub Actions, publica um artefato de relatório e persiste o histórico no Supabase central do painel.
 
-## Princípios
-- monitoramento separado de prevenção e recuperação;
-- nenhuma credencial real no código;
-- execução independente do painel;
-- falhas de autenticação não são tratadas como indisponibilidade;
-- recuperação ainda não conectada ao fluxo principal; o adapter existe somente como camada isolada e testável;
-- resultados devem ser verificáveis e auditáveis;
-- configuração por ambiente/Secrets, nunca por código.
+## Monitoramento
 
-## Estados canônicos
-- healthy
-- unavailable
-- paused
-- authentication_error
-- timeout
-- configuration_error
-- unknown
+- Verifica os projetos Supabase habilitados usando a Management API quando há token configurado.
+- Verifica o estado da instância KALATRACE Neo4j Aura.
+- Registra estado, latência, motivo, eventos e resumo por execução.
+- A execução agendada ocorre a cada 30 minutos.
+- Estados como `configuration_error` podem indicar um serviço intencionalmente desativado; isso não significa necessariamente indisponibilidade.
 
-## Fluxo
-1. carregar definição dos serviços;
-2. executar checks;
-3. normalizar resultado;
-4. classificar estado;
-5. avaliar política de recovery (quando habilitada);
-6. produzir eventos/alertas;
-7. gerar resumo da execução;
-8. futuramente persistir no painel e acionar recuperação autorizada após verificação do endpoint do provedor.
+## Política de recuperação automática
 
-## Supabase
-Quando houver um token de Management API configurado, o Watchdog usa o endpoint oficial de health do projeto para consultar o estado da infraestrutura. Isso permite separar o estado operacional do projeto de uma simples requisição HTTP.
+A recuperação exige **todas** as proteções aplicáveis: o serviço deve estar habilitado, sua configuração individual deve permitir recuperação, o projeto precisa constar na lista individual de projetos autorizados e o identificador do serviço precisa estar na allowlist do workflow.
 
-Cada grupo de projetos pode usar um Secret diferente, permitindo aplicar tokens com escopo mínimo. Os tokens nunca ficam no arquivo de configuração.
+A allowlist atual do workflow autoriza:
+- Supabase: Especialista em Pele, YansixPainelCRM, Banco Cashback, Sistema ENEM, YANSIX CRM, Fazendinha, Hora do Pão e KALATRACE Supabase.
+- Neo4j Aura: KALATRACE Neo4j.
 
-Sem Management API token, o adapter mantém um fallback HTTP usando a URL e a chave pública configuradas para o projeto. Esse fallback é útil para disponibilidade, mas não deve ser interpretado como equivalente à leitura do estado de infraestrutura pela Management API.
+Para os serviços Supabase autorizados, o fluxo permite no máximo uma tentativa por execução e verifica o estado após a solicitação. O KALATRACE Neo4j tem política própria, com até seis tentativas e verificação do estado operacional. A recuperação só deve ser considerada concluída após a verificação posterior confirmar que o serviço está operacional.
 
-Os projetos Supabase cadastrados no inventário são referências públicas de projeto; nenhuma chave ou token é armazenado no repositório.
+**Exceções explícitas:**
+- **Buscador CNPJ:** monitorado normalmente, mas recuperação automática desabilitada, com zero tentativas e sem projetos permitidos.
+- **Buscador_site:** serviço desabilitado e excluído do monitoramento ativo e da recuperação.
 
-## v0
-A primeira versão é somente leitura. Ela pode ser executada manualmente no GitHub Actions sem nenhuma credencial configurada. O resolvedor de configuração identifica cada serviço como `ready` ou `credentials_pending` sem imprimir valores sensíveis; serviços pendentes aparecem como `configuration_error` apenas para registrar a ausência de configuração, não como falha da infraestrutura. Não há tentativa de recuperação.
+Tokens de Management API, credenciais Neo4j e a chave privilegiada do Supabase central ficam somente nos GitHub Actions Secrets. Nunca coloque segredos no repositório, no frontend ou nos relatórios.
 
-Ainda não configuramos Secrets reais nem habilitamos execução agendada.
+## Histórico no painel
 
+O painel `admin.yansix.tech` lê as últimas 20 execuções de `public.watchdog_runs` no projeto Supabase central `mwjkvtuvnzzyuddzjbnu`. A persistência usa o segredo `WATCHDOG_PANEL_SUPABASE_SERVICE_ROLE`; se estiver indisponível, o workflow ainda publica o relatório como artefato do GitHub Actions, mas a execução não aparecerá no histórico do painel.
 
-## Recovery v0 — segurança
+Os registros do banco e os artefatos têm retenção alvo de 60 dias. O workflow remove registros antigos do banco a cada persistência e tem uma rotina periódica de limpeza das execuções antigas do GitHub Actions.
 
-A recuperação possui duas camadas de autorização:
+## Acionamento manual
 
-1. o serviço precisa estar explicitamente habilitado;
-2. `recovery.enabled` precisa estar explicitamente habilitado.
+O botão **Verificar agora** chama a Edge Function `watchdog-dispatch`, que exige sessão autenticada, valida o e-mail do operador autorizado e aceita apenas a ação fixa `run-checks`. O token do GitHub fica no segredo `WATCHDOG_GITHUB_TOKEN` da Edge Function.
 
-Além disso, a política pode restringir a recuperação por `projectRef`.
-
-Nesta etapa, somente o projeto Cashback está configurado para recovery na configuração de exemplo. O ENEM permanece desabilitado e com recovery desabilitado, mesmo compartilhando o mesmo token de conta.
-
-O adapter de recovery **não está conectado ao `main.mjs`**. A documentação pública atual da Supabase confirma a retomada pelo Dashboard, mas não confirma o endpoint `POST /v1/projects/{ref}/restore` previsto no desenho inicial. Portanto, nenhum restore real é executado nesta etapa. citeturn0search11turn0search0
+O acionamento manual inicia o mesmo workflow que contém a política de recuperação; portanto, serviços pausados que estejam na allowlist podem ser recuperados. O botão exige confirmação e a mensagem de aceite significa apenas que o GitHub aceitou a solicitação. Depois, confirme o término e o resultado da execução no GitHub Actions e no histórico do painel.
