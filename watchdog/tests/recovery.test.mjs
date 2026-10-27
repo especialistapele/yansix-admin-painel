@@ -1,4 +1,6 @@
 import test from "node:test";
+import { readFileSync } from "node:fs";
+import { resolveServices } from "../src/config.mjs";
 import assert from "node:assert/strict";
 import { canRecover, recoveryPolicySummary } from "../src/recovery-policy.mjs";
 import { createSupabaseRecoveryAdapter, RECOVERY_STATES } from "../src/recovery-supabase.mjs";
@@ -45,3 +47,57 @@ test("timeout é tratado sem expor token",async()=>{const error=new Error("timed
 test("não recupera serviço que não esteja na allowlist global de recuperação",()=>assert.deepEqual(canRecover(baseService,{state:STATES.PAUSED},new Set(["neo4j-kalatrace"])),{allowed:false,reason:"service_not_allowlisted"}));
 
 test("allowlist vazia não autoriza recuperação",()=>assert.deepEqual(canRecover(baseService,{state:STATES.PAUSED},new Set()),{allowed:false,reason:"service_not_allowlisted"}));
+
+
+const servicesConfig = JSON.parse(readFileSync(new URL("../config/services.example.json", import.meta.url), "utf8"));
+const testServices = resolveServices(servicesConfig, {
+  WATCHDOG_SUPABASE_ACCOUNT_1_TOKEN: "test-token-account-1",
+  WATCHDOG_SUPABASE_ACCOUNT_2_TOKEN: "test-token-account-2",
+  WATCHDOG_SUPABASE_ACCOUNT_2_ENEM_TOKEN: "test-token-enem",
+  WATCHDOG_SUPABASE_ACCOUNT_3_TOKEN: "test-token-account-3",
+  WATCHDOG_SUPABASE_ACCOUNT_4_TOKEN: "test-token-account-4",
+  WATCHDOG_SUPABASE_ACCOUNT_5_TOKEN: "test-token-account-5",
+  WATCHDOG_NEO4J_URI: "neo4j+s://test.databases.neo4j.io",
+  WATCHDOG_NEO4J_CLIENT_ID: "test-client-id",
+  WATCHDOG_NEO4J_CLIENT_SECRET: "test-client-secret"
+});
+const cnpjService = testServices.find((service) => service.id === "supabase-buscador-cnpj");
+const cashbackService = testServices.find((service) => service.id === "supabase-banco-cashback");
+const buscadorSiteService = testServices.find((service) => service.id === "supabase-buscador-site");
+
+test("Buscador CNPJ continua habilitado para monitoramento, mas tem recuperação desabilitada na configuração real", () => {
+  assert.equal(cnpjService.enabled, true);
+  assert.equal(cnpjService.projectRef, "qoecysrghxghoybervyw");
+  assert.equal(cnpjService.recovery.enabled, false);
+  assert.equal(cnpjService.recovery.maxAttempts, 0);
+});
+
+test("Buscador CNPJ pausado não é recuperado mesmo se for adicionado à allowlist global", () => {
+  assert.deepEqual(
+    canRecover(cnpjService, { state: STATES.PAUSED }, new Set(["supabase-buscador-cnpj"])),
+    { allowed: false, reason: "recovery_disabled" }
+  );
+});
+
+test("Buscador CNPJ pausado também é bloqueado pela allowlist global de recuperação", () => {
+  assert.deepEqual(
+    canRecover(cnpjService, { state: STATES.PAUSED }, new Set(["supabase-banco-cashback"])),
+    { allowed: false, reason: "service_not_allowlisted" }
+  );
+});
+
+test("banco Cashback continua elegível para recuperação quando pausado e autorizado", () => {
+  assert.deepEqual(
+    canRecover(cashbackService, { state: STATES.PAUSED }, new Set(["supabase-banco-cashback"])),
+    { allowed: true, reason: "paused_project_restore_authorized" }
+  );
+});
+
+test("Buscador_site continua desabilitado e sem recuperação", () => {
+  assert.equal(buscadorSiteService.enabled, false);
+  assert.equal(buscadorSiteService.recovery.enabled, false);
+  assert.deepEqual(
+    canRecover(buscadorSiteService, { state: STATES.PAUSED }, new Set(["supabase-buscador-site"])),
+    { allowed: false, reason: "recovery_disabled" }
+  );
+});
