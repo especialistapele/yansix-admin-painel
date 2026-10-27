@@ -8,6 +8,7 @@ on:
       - feature/watchdog-v0
       - test/watchdog-supabase-recovery-mocked
       - test/watchdog-cnpj-recovery-guard
+      - fix/watchdog-docs-and-ui-copy
       - feature/watchdog-dashboard-foundation
       - fix/watchdog-neo4j-nested-state
       - feat/watchdog-scoped-neo4j-recovery
